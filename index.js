@@ -1,5 +1,6 @@
 const axios = require("axios"); // send requests
 const cheerio = require("cheerio"); // parse html on server
+const { existsOne } = require("domutils");
 const puppeteer = require("puppeteer"); // used for testing
 
 // path for thecannon and house listings
@@ -19,14 +20,17 @@ let params = {
 };
 */
 
+/**
+ * Form data JSON - Received from front end
+ */
 let params = {
-  subType: null,
-  h_lType: 1,
-  h_sublet: null,
-  h_bedrooms: null,
-  h_price_range: null,
-  c_search: null,
-  pg: 1, // can be tracked from the first request
+  subType: null, // type of house - integer
+  h_lType: 1, // offering (1), wanted (2) - integer
+  h_sublet: null, // sublet ("y"), ("n") - string
+  h_bedrooms: null, // number of bedrooms - integer
+  h_price_range: null, // price range - integer
+  c_search: null, // search keywords
+  pg: 2, // can be tracked from the first request (if over limit, then goes back to 1)
 };
 
 (async () => {
@@ -36,14 +40,12 @@ let params = {
   // convert the page into parsed cheerio html
   const $ = cheerio.load(res.data);
 
-  // get all the listings on the current page
-
-  // console.log($("tbody").html());
-  // console.log($("tbody").children());
-
-  //
+  // get the number of listings in the table
   const tableRows = $("tbody").children("tr").length;
+
+  // iterate over each row in the table listing
   for (i = 0; i < tableRows; i++) {
+    // create an object to hold all row information to be parsed
     const row = $("tbody").children("tr")[i];
     let rowInfo = {
       postDate: "", // 0
@@ -54,45 +56,56 @@ let params = {
       distance: "", // 5
       sublet: "", // 6
       rooms: "", // 7
-      features: "", // 8
+      features: [], // 8
       price: "", // 9
     };
-    let rowIndex = 0;
 
+    let rowIndex = 0; // keep track of which information is being parsed
+
+    // iterate over each cell in the row (post date, availability, house type, etc...)
     for (j = 0; j < row.children.length; j++) {
-      const child = row.children[j];
+      const child = row.children[j]; // the current table cell (column)
       if (child != null && $(child).html() != null) {
         let prop = $(child).html();
         switch (rowIndex) {
           case 0:
-            rowInfo["postDate"] = prop;
+            rowInfo["postDate"] = prop != (undefined || null) ? prop : "N/A";
             break;
           case 1:
-            rowInfo["available"] = prop;
+            rowInfo["available"] = prop != (undefined || null) ? prop : "N/A";
             break;
           case 2:
-            rowInfo["listingType"] = prop;
+            rowInfo["listingType"] = prop != (undefined || null) ? prop : "N/A";
             break;
           case 3:
-            rowInfo["houseType"] = prop;
+            rowInfo["houseType"] = prop != (undefined || null) ? prop : "N/A";
             break;
           case 4:
-            rowInfo["address"] = prop;
+            // contains <a> tag inside the table cell
+            const address = $(child).children().html();
+            rowInfo["address"] =
+              address != (undefined || null) ? address : "N/A";
             break;
           case 5:
-            rowInfo["distance"] = prop;
+            rowInfo["distance"] = prop != (undefined || null) ? prop : "N/A";
             break;
           case 6:
-            rowInfo["sublet"] = prop;
+            rowInfo["sublet"] = prop != (undefined || null) ? prop : "N/A";
             break;
           case 7:
-            rowInfo["rooms"] = prop;
+            rowInfo["rooms"] = prop != (undefined || null) ? prop : "N/A";
             break;
           case 8:
-            rowInfo["features"] = prop;
+            // get the <li> elements inside the <ul> of features
+            const features = $(child).children(".features").children();
+            $(features).each(function () {
+              // get the <img> element in the <li> to get the feature
+              const feature = $(this).children().prop("alt");
+              rowInfo["features"].push(feature);
+            });
             break;
           case 9:
-            rowInfo["price"] = prop;
+            rowInfo["price"] = prop != (undefined || null) ? prop : "N/A";
             break;
         }
         rowIndex++;

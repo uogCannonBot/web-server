@@ -3,10 +3,24 @@ const cheerio = require("cheerio"); // parse html on server
 const { cannonPath } = require("./paths");
 
 /**
- *
- * @param {response.data} page
+ * In order to use this function correctly,
+ * the user must first make an initial search request
+ * with the following shape:
+ * {
+ *  subType: null,
+ *  h_lType: (integer),
+ *  h_sublet: "y" or "n",
+ *  h_bedrooms: (integer),
+ *  h_price_range: null,
+ *  c_search: null,
+ * }
+ * then send that response to this function
+ * @brief Retrieves all house listings from thecannon.ca
+ * @param {response.data} page Response data (the page) returned from GET'ing thecannon page
+ * @param {Function} listingFunc Function to parse the table returned from the response
+ * @return [ array of listings (JSON) ]
  */
-async function getListings(page) {
+async function getListings(page, listingFunc) {
   // convert the page into parsed cheerio html
   const $ = cheerio.load(page);
 
@@ -33,19 +47,23 @@ async function getListings(page) {
       const res = await axios.get(
         cannonPath + pagePath.replace(/.$/, String(i + 1))
       );
-      tableToJSON(res.data, listings);
+      listingFunc(res.data, listings);
     }
   } else {
-    console.log("NULL");
-    tableToJSON(page, listings);
+    listingFunc(page, listings);
   }
   return listings;
 }
 
 /**
- *
+ * Assuming that the table exists on the given page,
+ * this function will extract and parse all the data
+ * on the page into separate JSON objects and store them into
+ * the argument `listings`
  * @param {response.data} page
  * @param {[]} listings
+ *
+ * @return 1 on success, 0 on failure
  */
 function tableToJSON(page, listings) {
   // convert the page into parsed cheerio html
@@ -122,11 +140,13 @@ function tableToJSON(page, listings) {
         rowIndex++;
       }
     }
-    // console.log(rowInfo);
+    console.log(rowInfo);
     listings.push(rowInfo);
   }
+  return 1;
 }
 
 module.exports = {
   getListings,
+  tableToJSON,
 };

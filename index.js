@@ -1,8 +1,8 @@
 const axios = require("axios"); // send requests
 const cheerio = require("cheerio"); // parse html on server
-const puppeteer = require("puppeteer"); // used for testing
-const parser = require("./parser");
-const { housePath } = require("./paths");
+// const puppeteer = require("puppeteer"); // used for testing
+const parser = require("./parser/parser");
+const { housePath } = require("./parser/paths");
 
 /*
 // get the rest from the front-end (not the page!)
@@ -46,6 +46,6 @@ let params = {
   const res = await axios.get(housePath, { params });
 
   // get the total number of listings on each loaded page
-  const allListings = await parser.getListings(res.data);
+  const allListings = await parser.getListings(res.data, parser.tableToJSON);
   console.dir(allListings, { maxArrayLength: null });
 })();

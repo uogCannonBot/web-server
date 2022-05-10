@@ -98,10 +98,12 @@ function tableToJSON(page, listings) {
         let prop = $(child).html();
         switch (rowIndex) {
           case 0:
-            rowInfo["postDate"] = prop != (undefined || null) ? prop : "N/A";
+            rowInfo["postDate"] =
+              prop != (undefined || null) ? new Date(prop) : "N/A";
             break;
           case 1:
-            rowInfo["available"] = prop != (undefined || null) ? prop : "N/A";
+            rowInfo["available"] =
+              prop != (undefined || null) ? new Date(prop) : "N/A";
             break;
           case 2:
             rowInfo["listingType"] = prop != (undefined || null) ? prop : "N/A";
@@ -140,7 +142,7 @@ function tableToJSON(page, listings) {
         rowIndex++;
       }
     }
-    console.log(rowInfo);
+    // console.log(rowInfo);
     listings.push(rowInfo);
   }
   return 1;

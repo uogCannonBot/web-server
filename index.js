@@ -23,7 +23,7 @@ let params = {
 let params = {
   subType: null, // type of house - integer
   h_lType: 1, // offering (1), wanted (2) - integer
-  h_sublet: null, // sublet ("y"), ("n") - string
+  h_sublet: "n", // sublet ("y"), ("n") - string
   h_bedrooms: null, // number of bedrooms - integer
   h_price_range: null, // price range - integer
   c_search: null, // search keywords
@@ -47,5 +47,13 @@ let params = {
 
   // get the total number of listings on each loaded page
   const allListings = await parser.getListings(res.data, parser.tableToJSON);
-  console.dir(allListings, { maxArrayLength: null });
+  // console.dir(allListings, { maxArrayLength: null });
+  const todaysListings = allListings.filter((listing) => {
+    const today = new Date(new Date().setHours(0, 0, 0, 0)); // get todays date but without any seconds passed
+    if (today.valueOf() == listing.postDate.valueOf()) {
+      return true;
+    }
+    return false;
+  });
+  console.log(todaysListings);
 })();

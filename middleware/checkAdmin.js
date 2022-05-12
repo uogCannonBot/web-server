@@ -13,7 +13,7 @@ const checkAdmin = (request, response, next) => {
       return response.status(404).end();
     }
     if (res) {
-      return response.json({ success: true });
+      next();
     } else {
       return response.json({
         success: false,

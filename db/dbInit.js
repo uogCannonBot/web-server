@@ -1,0 +1,34 @@
+/* make sure that the database 'cannon' exists */
+const mysql = require("mysql2/promise"); // get client
+const db = require("./dbConnect");
+
+async function main() {
+  await db.connect();
+  let connection;
+  try {
+    // connect to the database
+    connection = db.get();
+
+    // initialize all related tables
+    await connection.execute(
+      // listings table
+      "CREATE TABLE IF NOT EXISTS listings (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, type VARCHAR(50) NOT NULL)"
+    );
+    await connection.execute(
+      // house-listings table
+      "CREATE TABLE IF NOT EXISTS houses (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, post_date DATETIME NOT NULL, available DATETIME NOT NULL, l_type BOOLEAN NOT NULL, h_type VARCHAR(50) NOT NULL, address VARCHAR(250) NOT NULL, distance VARCHAR(8) NOT NULL, sublet BOOLEAN NOT NULL, rooms INT NOT NULL, price VARCHAR(50) NOT NULL)"
+    );
+    await connection.execute(
+      // house-features table
+      "CREATE TABLE IF NOT EXISTS houseFeatures (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, house_id INT NOT NULL, pets_allowed BOOLEAN NOT NULL, smoking BOOLEAN NOT NULL, parking_inc BOOLEAN NOT NULL, laundry BOOLEAN NOT NULL, cooking BOOLEAN NOT NULL, FOREIGN KEY (house_id) REFERENCES houses(id))"
+    );
+    console.log("dbInit.js: Successfully initialized all tables");
+  } catch (err) {
+    console.log("dbInit.js: error: " + err);
+  } finally {
+    if (connection && connection.end) connection.end();
+    console.log("dbInit.js: Closed MySQL connection");
+  }
+}
+
+main();

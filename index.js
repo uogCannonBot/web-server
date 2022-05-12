@@ -43,17 +43,24 @@ let params = {
   );
   */
 
-  const res = await axios.get(housePath, { params });
+  let res = await axios.get(housePath, { params });
 
   // get the total number of listings on each loaded page
   const allListings = await parser.getListings(res.data, parser.tableToJSON);
   // console.dir(allListings, { maxArrayLength: null });
   const todaysListings = allListings.filter((listing) => {
     const today = new Date(new Date().setHours(0, 0, 0, 0)); // get todays date but without any seconds passed
+    today.setDate(10);
     if (today.valueOf() == listing.postDate.valueOf()) {
       return true;
     }
     return false;
   });
   console.log(todaysListings);
+
+  res = await axios.post("http://localhost:8080/admin/listings", {
+    PASSWORD:
+      "oHAgTn4b3NjDh8dj3QnQr7mAe%n*ojEuX4uNFpyEtsY^q5tidSRrzfQdm2osV9fQtDH8&D",
+    listing: todaysListings[0],
+  });
 })();

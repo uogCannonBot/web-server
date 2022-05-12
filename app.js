@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const { checkAdmin } = require("./middleware/checkAdmin");
 const admin = require("./routes/admin");
+const db = require("./db/dbConnect");
 const cors = require("cors");
 const app = express();
 
@@ -27,6 +28,8 @@ app.all("/admin/*", checkAdmin, (request, response, next) => {
 app.post("/admin/listings", admin.load);
 
 // Start
-app.listen(process.env.PORT, () => {
+
+app.listen(process.env.PORT, async () => {
+  await db.connect();
   console.log(`Server listening on PORT ${process.env.PORT}`);
 });

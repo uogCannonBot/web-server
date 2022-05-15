@@ -87,6 +87,7 @@ function tableToJSON(page, listings) {
       rooms: "", // 7
       features: [], // 8
       price: "", // 9
+      url: "", // find last through jquery
     };
 
     let rowIndex = 0; // keep track of which information is being parsed
@@ -142,6 +143,7 @@ function tableToJSON(page, listings) {
         rowIndex++;
       }
     }
+    rowInfo.url = cannonPath + $(row).find("a").attr("href"); // taken from thecannnon jquery script
     // console.log(rowInfo);
     listings.push(rowInfo);
   }

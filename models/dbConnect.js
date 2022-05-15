@@ -1,3 +1,5 @@
+"use strict";
+
 const mysql = require("mysql2/promise"); // get client
 
 let connection;

@@ -1,5 +1,6 @@
+"use strict";
+
 /* make sure that the database 'cannon' exists */
-const mysql = require("mysql2/promise"); // get client
 const db = require("./dbConnect");
 
 async function main() {

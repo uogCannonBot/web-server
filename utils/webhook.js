@@ -1,14 +1,74 @@
-const { WebhookClient, MessageEmbed, Webhook } = require("discord.js");
+// the receiving discord webhook for all server messages
+
+"use strict";
+
+const { WebhookClient, MessageEmbed } = require("discord.js");
 const urls = [
   "https://discord.com/api/webhooks/972880881335271465/FfDqG5_54FaFLfsJsre0czOnUaD_Y_4CsxmBXA9EUt-lMhTSpP86eIu3NAMtrMnqFd6D",
   "https://discord.com/api/webhooks/972882801043046400/wr0k4r-TbDA1rxrOj0bZJkAVYpLUgbx40RgX6t0Zsr4CihqLmsxdNoh-0Cr-7J6RxKsm",
 ];
 
-const sendWcMessage = (message) => {
+const sendWcMessage = (listing) => {
   urls.forEach((url) => {
     const webhookClient = new WebhookClient({ url });
+
+    // edit the appearance of the webhook
+    webhookClient
+      .edit({
+        name: "TheCannon",
+        avatar: "http://localhost:8080/cannon.png",
+      })
+      .catch(console.error);
+
+    // Create an embed with all the information from the listing
+    const embed = new MessageEmbed()
+      .setColor("#a0410d")
+      .setTitle("New " + listing.houseType + " Listing")
+      .setURL(listing.url)
+      .setAuthor({
+        name: "TheCannon",
+        iconURL: "attachment://cannon.png",
+        url: "https://thecannon.ca/",
+      })
+      .setThumbnail("attachment://house.png")
+      .addFields(
+        {
+          name: "✅ Available",
+          value: listing.available.toDateString(),
+        },
+        { name: "📍 Address", value: listing.address },
+        { name: "🚀 Distance", value: listing.distance },
+        { name: "🛌 Rooms", value: listing.rooms, inline: true },
+        { name: "💵 Price", value: listing.price, inline: true },
+        {
+          name: "Features",
+          value:
+            "> " +
+            listing.features.reduce(
+              (prevFeature, currFeature) => prevFeature + "\n> " + currFeature
+            ),
+        }
+      )
+      .setTimestamp()
+      .setFooter({
+        text: "TheCannon",
+        iconURL: "attachment://cannon.png",
+      });
+
+    // const buttons = new MessageActionRow();
+    // buttons.addComponents(
+    //   new MessageButton()
+    //     .setCustomId("primary")
+    //     .setLabel("Link")
+    //     .setStyle("LINK")
+    //     .setURL(listing.url)
+    //     .setEmoji("🔗")
+    // );
+
+    // send the message
     webhookClient.send({
-      content: message,
+      embeds: [embed],
+      files: ["./public/house.png", "./public/cannon.png"],
     });
   });
 };

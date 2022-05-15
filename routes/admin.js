@@ -1,5 +1,6 @@
-const res = require("express/lib/response");
-const db = require("../db/dbConnect");
+"use strict";
+
+const db = require("../models/dbConnect");
 const { sendWcMessage } = require("../utils/webhook");
 
 exports.load = async function (request, response) {
@@ -90,10 +91,8 @@ exports.load = async function (request, response) {
       ]
     );
 
-    // TODO: Send a webhook message that a new listing is added
-    sendWcMessage(
-      "TODO: Send the Listing Object and create an Embed for Discord messages"
-    );
+    // Send a webhook message that a new listing is added to Discord
+    sendWcMessage(listing);
 
     return response.json({
       success: true,

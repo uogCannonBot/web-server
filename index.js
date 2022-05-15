@@ -1,8 +1,11 @@
+"use strict";
+
 const axios = require("axios"); // send requests
 const cheerio = require("cheerio"); // parse html on server
 // const puppeteer = require("puppeteer"); // used for testing
-const parser = require("./parser/parser");
-const { housePath } = require("./parser/paths");
+const parser = require("./scripts/parser");
+const { housePath } = require("./scripts/paths");
+const { sendWcMessage } = require("./utils/webhook");
 
 /*
 // get the rest from the front-end (not the page!)
@@ -61,6 +64,8 @@ let params = {
   res = await axios.post("http://localhost:8080/admin/listings", {
     PASSWORD:
       "oHAgTn4b3NjDh8dj3QnQr7mAe%n*ojEuX4uNFpyEtsY^q5tidSRrzfQdm2osV9fQtDH8&D",
-    listing: todaysListings[0],
+    // listing: todaysListings[0],
   });
+
+  sendWcMessage(todaysListings[0]);
 })();

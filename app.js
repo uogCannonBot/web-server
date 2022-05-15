@@ -1,9 +1,11 @@
+"use strict";
+
 require("dotenv").config();
 
 const express = require("express");
 const { checkAdmin } = require("./middleware/checkAdmin");
 const admin = require("./routes/admin");
-const db = require("./db/dbConnect");
+const db = require("./models/dbConnect");
 const cors = require("cors");
 const app = express();
 
@@ -20,6 +22,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors());
+app.use(express.static("public"));
 app.all("/admin/*", checkAdmin, (request, response, next) => {
   next();
 });

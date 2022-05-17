@@ -65,11 +65,16 @@ let params = {
   // log all listings from today
   console.log(todaysListings);
 
-  // TODO: For each listing today, make a request with the password and the listing itself
-  res = await axios.post("http://localhost:8080/admin/listings", {
-    PASSWORD: process.env.PASSWORD,
-    // listing: todaysListings[0],
+  // For each listing today, make a request with the password and the listing itself
+  console.log("There are ", todaysListings.length, " listings today");
+  todaysListings.forEach(async (listing) => {
+    try {
+      const listRes = await axios.post("http://localhost:8080/admin/listings", {
+        PASSWORD: process.env.PASSWORD,
+        listing,
+      });
+    } catch (err) {
+      console.error(err);
+    }
   });
-
-  sendWcMessage(todaysListings[0]);
 })();

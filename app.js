@@ -6,6 +6,7 @@ const express = require("express");
 const { checkAdmin } = require("./middleware/checkAdmin");
 const admin = require("./routes/admin");
 const db = require("./models/dbConnect");
+const wb = require("./utils/webhook");
 const cors = require("cors");
 const app = express();
 
@@ -29,8 +30,8 @@ app.all("/admin/*", checkAdmin, (request, response, next) => {
 app.post("/admin/listings", admin.load);
 
 // Start
-
 app.listen(process.env.PORT, async () => {
   await db.connect(); // connect to SQL database once the application is run
+  await wb.connect();
   console.log(`Server listening on PORT ${process.env.PORT}`);
 });

@@ -1,7 +1,7 @@
 "use strict";
 
 const db = require("../models/dbConnect");
-const { sendWcMessage } = require("../utils/webhook");
+const sendWcMessage = require("../utils/sendWcMessage");
 
 exports.load = async function (request, response) {
   // Check that the listing is in the body of the request
@@ -92,7 +92,17 @@ exports.load = async function (request, response) {
     );
 
     // Send a webhook message that a new listing is added to Discord
-    sendWcMessage(listing);
+    try {
+      sendWcMessage(listing);
+    } catch (err) {
+      console.log(
+        "An error occurred when trying to send a listing to the Discord WebHook"
+      );
+      return response.json({
+        success: false,
+        error: err,
+      });
+    }
 
     return response.json({
       success: true,

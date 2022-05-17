@@ -11,8 +11,6 @@ const app = express();
 
 /**
  *
- * TODO: Connect to SQL database
- *        - Initially populate the database ONLY once (upon server setup)
  * TODO: Run the parser script on the server every 5 minutes (1000 * 60 * 5)
  * TODO: For every INSERT query to be made, iterate through all the "saved searches" and check
  * if those searches match the current listing being added
@@ -33,6 +31,6 @@ app.post("/admin/listings", admin.load);
 // Start
 
 app.listen(process.env.PORT, async () => {
-  await db.connect();
+  await db.connect(); // connect to SQL database once the application is run
   console.log(`Server listening on PORT ${process.env.PORT}`);
 });

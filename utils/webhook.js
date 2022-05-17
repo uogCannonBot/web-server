@@ -36,17 +36,27 @@ const sendWcMessage = (listing) => {
           name: "✅ Available",
           value: listing.available.toDateString(),
         },
-        { name: "📍 Address", value: listing.address },
+        {
+          name: "📍 Address",
+          value: `[${
+            listing.address
+          }](https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            listing.address
+          )})`,
+        },
         { name: "🚀 Distance", value: listing.distance },
         { name: "🛌 Rooms", value: listing.rooms, inline: true },
         { name: "💵 Price", value: listing.price, inline: true },
         {
           name: "Features",
           value:
-            "> " +
-            listing.features.reduce(
-              (prevFeature, currFeature) => prevFeature + "\n> " + currFeature
-            ),
+            listing.features.length > 0
+              ? "> " +
+                listing.features.reduce(
+                  (prevFeature, currFeature) =>
+                    prevFeature + "\n> " + currFeature
+                )
+              : "> None To Display",
         }
       )
       .setTimestamp()
@@ -54,16 +64,6 @@ const sendWcMessage = (listing) => {
         text: "TheCannon",
         iconURL: "attachment://cannon.png",
       });
-
-    // const buttons = new MessageActionRow();
-    // buttons.addComponents(
-    //   new MessageButton()
-    //     .setCustomId("primary")
-    //     .setLabel("Link")
-    //     .setStyle("LINK")
-    //     .setURL(listing.url)
-    //     .setEmoji("🔗")
-    // );
 
     // send the message
     webhookClient.send({

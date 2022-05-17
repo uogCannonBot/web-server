@@ -1,14 +1,24 @@
+/**
+ * Author: Jason Kyle Tan
+ * File: index.js
+ * Description: The purpose of this script is to be run every 5 minutes
+ *              on an external server and parse thecannon website for the listings being requested
+ *              and then sending a request to the server-listener for updating the listings in the database
+ */
+
 "use strict";
 
+require("dotenv").config();
 const axios = require("axios"); // send requests
-const cheerio = require("cheerio"); // parse html on server
-// const puppeteer = require("puppeteer"); // used for testing
+const { config } = require("dotenv");
 const parser = require("./scripts/parser");
 const { housePath } = require("./scripts/paths");
 const { sendWcMessage } = require("./utils/webhook");
 
+/**
+ * General Form of Listings
+ */
 /*
-// get the rest from the front-end (not the page!)
 let params = {
   subType: null,
   h_lType: 1,
@@ -21,7 +31,7 @@ let params = {
 */
 
 /**
- * Form data JSON - Received from front end
+ * Type of Listings to Get (No sublets, only offering houses)
  */
 let params = {
   subType: null, // type of house - integer
@@ -30,40 +40,34 @@ let params = {
   h_bedrooms: null, // number of bedrooms - integer
   h_price_range: null, // price range - integer
   c_search: null, // search keywords
-  // pg: 1, // can be tracked from the first request (if over limit, then goes back to 1)
 };
 
 (async () => {
-  /*
-  axios.interceptors.request.use(
-    function (config) {
-      console.log(config.url);
-      return config;
-    },
-    function (err) {
-      return Promise.reject(err);
-    }
-  );
-  */
-
+  // get the first page on thecannon website
   let res = await axios.get(housePath, { params });
 
-  // get the total number of listings on each loaded page
+  // get the total number of listings on each loaded page from the first page
   const allListings = await parser.getListings(res.data, parser.tableToJSON);
-  // console.dir(allListings, { maxArrayLength: null });
+  // console.dir(allListings, { maxArrayLength: null }); // logs out all listings
+
+  // filter by todays listings
   const todaysListings = allListings.filter((listing) => {
-    const today = new Date(new Date().setHours(0, 0, 0, 0)); // get todays date but without any seconds passed
-    today.setDate(10);
+    // get todays date but without any seconds passed
+    const today = new Date(new Date().setHours(0, 0, 0, 0));
+
+    // check if the listings date is the same as TODAY
     if (today.valueOf() == listing.postDate.valueOf()) {
       return true;
     }
     return false;
   });
+
+  // log all listings from today
   console.log(todaysListings);
 
+  // TODO: For each listing today, make a request with the password and the listing itself
   res = await axios.post("http://localhost:8080/admin/listings", {
-    PASSWORD:
-      "oHAgTn4b3NjDh8dj3QnQr7mAe%n*ojEuX4uNFpyEtsY^q5tidSRrzfQdm2osV9fQtDH8&D",
+    PASSWORD: process.env.PASSWORD,
     // listing: todaysListings[0],
   });
 

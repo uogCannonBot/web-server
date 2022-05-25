@@ -32,6 +32,6 @@ app.post("/admin/listings", admin.load);
 // Start
 app.listen(process.env.PORT, async () => {
   await db.connect(); // connect to SQL database once the application is run
-  await wb.connect();
+  await wb.connect(); // connect to ALL Discord WebHooks related to the application
   console.log(`Server listening on PORT ${process.env.PORT}`);
 });

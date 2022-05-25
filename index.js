@@ -10,10 +10,8 @@
 
 require("dotenv").config();
 const axios = require("axios"); // send requests
-const { config } = require("dotenv");
 const parser = require("./scripts/parser");
 const { housePath } = require("./scripts/paths");
-const { sendWcMessage } = require("./utils/webhook");
 
 /**
  * General Form of Listings
@@ -67,12 +65,22 @@ let params = {
 
   // For each listing today, make a request with the password and the listing itself
   console.log("There are ", todaysListings.length, " listings today");
+
   todaysListings.forEach(async (listing) => {
     try {
-      const listRes = await axios.post("http://localhost:8080/admin/listings", {
-        PASSWORD: process.env.PASSWORD,
-        listing,
-      });
+      axios
+        .post(
+          "https://ac61-2607-fea8-8420-6900-9566-4247-2eda-8cd3.ngrok.io/admin/listings",
+          {
+            PASSWORD: process.env.PASSWORD,
+            listing,
+          }
+        )
+        .then((res) => {
+          console.log(
+            "Successfully added listing to database and sent to Discord"
+          );
+        });
     } catch (err) {
       console.error(err);
     }

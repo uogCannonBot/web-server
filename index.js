@@ -70,7 +70,7 @@ let params = {
     try {
       axios
         .post(
-          "https://ac61-2607-fea8-8420-6900-9566-4247-2eda-8cd3.ngrok.io/admin/listings",
+         process.env.BASE_URL + "/admin/listings",
           {
             PASSWORD: process.env.PASSWORD,
             listing,

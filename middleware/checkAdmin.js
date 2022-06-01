@@ -1,6 +1,6 @@
 "use strict";
 
-require("dotenv").config();
+const config = require("../utils/config");
 
 const bcrypt = require("bcryptjs");
 
@@ -10,7 +10,7 @@ const checkAdmin = (request, response, next) => {
   }
 
   const { PASSWORD } = request.body;
-  bcrypt.compare(PASSWORD, process.env.HASH, (err, res) => {
+  bcrypt.compare(PASSWORD, config.app.HASH, (err, res) => {
     if (err) {
       return response.status(404).end();
     }

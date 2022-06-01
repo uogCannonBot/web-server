@@ -1,6 +1,6 @@
 "use strict";
 
-require("dotenv").config();
+const config = require("./utils/config");
 
 const express = require("express");
 require("express-async-errors");
@@ -23,10 +23,10 @@ app.all("/admin/*", checkAdmin, (request, response, next) => {
 app.post("/admin/listings", admin.load);
 
 // Start
-const server = app.listen(process.env.PORT, async () => {
+const server = app.listen(config.app.PORT, async () => {
   await dbPool.connect(); // connect to SQL database once the application is run
   await wb.connect(); // connect to ALL Discord WebHooks related to the application
-  console.log(`Server listening on PORT ${process.env.PORT}`);
+  console.log(`Server listening on PORT ${config.app.PORT}`);
 });
 
 // for shutting down database, keep track of all connecitons

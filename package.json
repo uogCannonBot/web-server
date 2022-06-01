@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "shutdown": "pm2 stop app && pm2 delete app && pm2 save",
+    "deploy": "NODE_ENV=production pm2 start app.js --log ./logs.txt --time && pm2 save"
   },
   "author": "Jason Kyle Tan",
   "license": "MIT",

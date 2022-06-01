@@ -1,6 +1,6 @@
 "use strict";
 
-require("dotenv").config();
+const config = require("../utils/config");
 
 const mysql = require("mysql2/promise"); // get client
 
@@ -12,8 +12,8 @@ module.exports = {
       pool = await mysql.createPool({
         connectionLimit: 10,
         host: "localhost",
-        user: "root",
-        password: process.env.DB_PASSWORD,
+        user: "jason",
+        password: config.database.PASSWORD,
         database: "cannon",
       });
 

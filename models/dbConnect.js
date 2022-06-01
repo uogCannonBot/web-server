@@ -4,17 +4,19 @@ require("dotenv").config();
 
 const mysql = require("mysql2/promise"); // get client
 
-let connection;
+let pool;
 
 module.exports = {
   connect: async function () {
     try {
-      connection = await mysql.createConnection({
+      pool = await mysql.createPool({
+        connectionLimit: 10,
         host: "localhost",
-        user: "jason",
+        user: "root",
         password: process.env.DB_PASSWORD,
         database: "cannon",
       });
+
       console.log("dbConnect.js: Successfully connected to MySQL server");
     } catch (err) {
       console.log("dbConnect.js: Failed to connect to database");
@@ -22,6 +24,6 @@ module.exports = {
   },
 
   get: function () {
-    return connection;
+    return pool;
   },
 };

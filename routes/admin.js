@@ -20,7 +20,14 @@ exports.load = async function (request, response) {
   // console.log(listing);
 
   // Check if the listing exists in the database via postDate, available, listingType, address, price
-  const dbConnection = db.get(); // get the database connection
+  const dbConnection = await db.get().getConnection(); // get the database connection
+  if (!dbConnection) {
+    return response.json({
+      success: false,
+      message: "Unable to connect to perform queries for some reason",
+    });
+  }
+
   const selectQuery =
     "SELECT * FROM houses WHERE (post_date = ? AND address = ? AND available = ? AND l_type = ? AND price = ?)";
   const [rows, fields] = await dbConnection.query(selectQuery, [
@@ -98,13 +105,14 @@ exports.load = async function (request, response) {
       console.log(
         "An error occurred when trying to send a listing to the Discord WebHook"
       );
+      dbConnection.release();
       return response.json({
         success: false,
         error: err,
       });
     }
 
-    return response.json({
+    await response.json({
       success: true,
       message:
         "successfully added a new listing with the id: " + resHeader.insertId,
@@ -112,9 +120,11 @@ exports.load = async function (request, response) {
     });
   } else {
     // return early if the listing exists already
-    return response.json({
+    await response.json({
       success: true,
       message: "listing already exists",
     });
   }
+  // at the end, release db connection from pool
+  dbConnection.release();
 };

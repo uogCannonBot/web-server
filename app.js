@@ -3,20 +3,13 @@
 require("dotenv").config();
 
 const express = require("express");
+require("express-async-errors");
 const { checkAdmin } = require("./middleware/checkAdmin");
 const admin = require("./routes/admin");
-const db = require("./models/dbConnect");
+const dbPool = require("./models/dbConnect");
 const wb = require("./utils/webhook");
 const cors = require("cors");
 const app = express();
-
-/**
- *
- * TODO: Run the parser script on the server every 5 minutes (1000 * 60 * 5)
- * TODO: For every INSERT query to be made, iterate through all the "saved searches" and check
- * if those searches match the current listing being added
- * TODO: Alert the user afterwards using front-end (send a request from the back-end to do so)
- */
 
 // Middleware
 app.use(express.json());
@@ -30,8 +23,49 @@ app.all("/admin/*", checkAdmin, (request, response, next) => {
 app.post("/admin/listings", admin.load);
 
 // Start
-app.listen(process.env.PORT, async () => {
-  await db.connect(); // connect to SQL database once the application is run
+const server = app.listen(process.env.PORT, async () => {
+  await dbPool.connect(); // connect to SQL database once the application is run
   await wb.connect(); // connect to ALL Discord WebHooks related to the application
   console.log(`Server listening on PORT ${process.env.PORT}`);
 });
+
+// for shutting down database, keep track of all connecitons
+let connections = [];
+server.on("connection", (connection) => {
+  connections.push(connection);
+  connection.on(
+    "close",
+    () => (connections = connections.filter((curr) => curr !== connection)) // whenever a connection is closed, remove from the list
+  );
+});
+
+process.on("SIGTERM", shutdownServer);
+process.on("SIGINT", shutdownServer);
+
+function shutdownServer() {
+  console.log("Received termination/kill signal, shutting down server");
+  server.close(() => {
+    console.log(
+      "SUCCESS: Closed remaining connections to the server being hosted."
+    );
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    console.error(
+      "ERROR: Forcefully shutting down server, since could not close all connections"
+    );
+    process.exit(1);
+  }, 10000);
+
+  connections.forEach((curr) => curr.end());
+  setTimeout(() => connections.forEach((curr) => curr.destroy()), 5000);
+  try {
+    dbPool.get().end();
+    console.log("SUCCESS: Closed all databae connections");
+  } catch (err) {
+    console.log(
+      `ERROR: Failed to close database connection pool for reason: ${err}`
+    );
+  }
+}

@@ -4,10 +4,10 @@
 const db = require("./dbConnect");
 
 async function main() {
-  await db.connect();
+  await db.connect(); // first create a pool
   let connection;
   try {
-    // connect to the database
+    // get said pool
     connection = db.get();
 
     // initialize all related tables

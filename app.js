@@ -2,25 +2,47 @@
 
 const config = require("./utils/config");
 
+// Dependencies
 const express = require("express");
+const session = require("express-session");
+const passport = require("passport");
 require("express-async-errors");
+const cors = require("cors");
+
+// sub-routines/classes
 const { checkAdmin } = require("./middleware/checkAdmin");
-const admin = require("./routes/admin");
+const discordRoute = require("./routes/auth/discord");
+const listingsRoute = require("./routes/admin");
 const dbPool = require("./models/dbConnect");
 const wb = require("./utils/webhook");
-const cors = require("cors");
+
 const app = express();
+
+require("./strategies/discord");
 
 // Middleware
 app.use(express.json());
 app.use(cors());
 app.use(express.static("public"));
+app.use(
+  session({
+    secret: config.app.SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+// passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Routes
 app.all("/admin/*", checkAdmin, (request, response, next) => {
   next();
 });
-
-// Routes
-app.post("/admin/listings", admin.load);
+app.use("/api/auth", discordRoute);
+app.use("/admin", listingsRoute);
+// app.post("/admin/listings", admin.load);
 
 // Start
 const server = app.listen(config.app.PORT, async () => {

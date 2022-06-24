@@ -7,7 +7,7 @@ const { WebhookClient } = require("discord.js");
 // to be transferred into a database of users -> webhook urls in mysql,
 // for now going to hard-code until Discord API is hooked up to the server
 const urls = [
-   "https://discord.com/api/webhooks/981558986727882882/tq0CIHNMWxQIAW2aCKTOvrLEtBexC6fkS7vZJTITBflaMH8hhp-eCrtqlLsy-iqRZAxs",
+  "https://discord.com/api/webhooks/972880881335271465/FfDqG5_54FaFLfsJsre0czOnUaD_Y_4CsxmBXA9EUt-lMhTSpP86eIu3NAMtrMnqFd6D",
 ];
 
 let clients = [];

@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "dev": "nodemon app.js",
+    "dev": "NODE_ENV=development nodemon app.js",
+    "init": "node models/dbInit.js",
     "shutdown": "pm2 stop app && pm2 delete app && pm2 save",
     "deploy": "NODE_ENV=production pm2 start app.js --log ./logs.txt --time && pm2 save"
   },
@@ -19,10 +20,10 @@
     "express": "^4.18.1",
     "express-async-errors": "^3.1.1",
     "express-session": "^1.17.3",
+    "morgan": "^1.10.0",
     "mysql2": "^2.3.3",
     "passport": "^0.6.0",
-    "passport-discord": "^0.1.4",
-    "puppeteer": "^13.5.2"
+    "passport-discord": "^0.1.4"
   },
   "devDependencies": {
     "nodemon": "^2.0.16"

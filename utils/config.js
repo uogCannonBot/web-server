@@ -8,6 +8,10 @@ const config = {
     SECRET: process.env.SECRET,
   },
   database: {
+    USER:
+      process.env.NODE_ENV === "development"
+        ? process.env.LOCAL_USER
+        : process.env.PRODUCTION_USER,
     PASSWORD: process.env.DB_PASSWORD,
   },
   connection: {

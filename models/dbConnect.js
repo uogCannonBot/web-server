@@ -11,8 +11,8 @@ module.exports = {
     try {
       pool = await mysql.createPool({
         connectionLimit: 10,
-        host: "localhost",
-        user: "jason",
+        host: "localhost", // since they're hosted on the same system
+        user: config.database.USER, // changes based on local-dev or production
         password: config.database.PASSWORD,
         database: "cannon",
       });

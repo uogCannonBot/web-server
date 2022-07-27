@@ -8,22 +8,27 @@ const session = require("express-session");
 const passport = require("passport");
 require("express-async-errors");
 const cors = require("cors");
+const morgan = require("morgan");
 
 // sub-routines/classes
 const { checkAdmin } = require("./middleware/checkAdmin");
 const discordRoute = require("./routes/auth/discord");
 const listingsRoute = require("./routes/admin");
+const loginRoute = require("./routes/login");
+const dashboardRoute = require("./routes/dashboard");
 const dbPool = require("./models/dbConnect");
 const wb = require("./utils/webhook");
 
 const app = express();
 
+console.log("NODE_ENV=", process.env.NODE_ENV);
+
 require("./strategies/discord");
 
 // Middleware
 app.use(express.json());
-app.use(cors());
-app.use(express.static("public"));
+app.use(cors({ credentials: true }));
+// app.use(express.static("public"));
 app.use(
   session({
     secret: config.app.SECRET,
@@ -42,7 +47,15 @@ app.all("/admin/*", checkAdmin, (request, response, next) => {
 });
 app.use("/api/auth", discordRoute);
 app.use("/admin", listingsRoute);
-// app.post("/admin/listings", admin.load);
+app.use("/dashboard", dashboardRoute);
+app.use(loginRoute);
+
+app.use((req, res) => {
+  res.status(404).send({ error: "unknown endpoint" });
+}); // generic route (ALWAYS KEEP LAST)
+
+// logger last
+app.use(morgan("dev"));
 
 // Start
 const server = app.listen(config.app.PORT, async () => {

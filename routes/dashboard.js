@@ -221,8 +221,54 @@ router.put("/edit/:webhookId", async (req, res) => {
  * Request Type - DELETE
  * Purpose - Delete a webhook via id
  */
-router.delete("/delete/:webhook_id", async (req, res) => {
-  res.json({ message: "TODO: Delete a webhook" });
+router.delete("/delete/:webhookId", async (req, res) => {
+  // // Get the current users id
+  // const id = BigInt(req.session.passport.user.id); // change later to CONST
+  // if (!id) {
+  //   return res.status(400).end();
+  // }
+  const id = BigInt(231776440587255808); // delete later
+
+  // Get the webhook id from url
+  const { webhookId } = req.params;
+  if (!webhookId) {
+    return res
+      .status(404)
+      .json({ error: "no webhook id was provided to delete" });
+  }
+
+  // Get db connection
+  const dbConnection = await db.get().getConnection();
+  if (!dbConnection) {
+    return res.status(500).json({ error: "failed to connect to database" });
+  }
+
+  try {
+    // attempt to delete the webhookOption
+    const [optionsHeader, fields] = await dbConnection.query(
+      "DELETE FROM webhookOptions WHERE user_id = ? AND webhook_id = ?",
+      [id, webhookId]
+    );
+
+    // delete the webhook itself
+    const [webhookHeader, wFields] = await dbConnection.query(
+      "DELETE FROM webhooks WHERE user_id = ? AND webhook_id = ?",
+      [id, webhookId]
+    );
+    if (optionsHeader.affectedRows === 0 || webhookHeader.affectedRows === 0) {
+      res
+        .status(404)
+        .json({ error: `record with webhook id: ${webhookId} does not exist` });
+    }
+  } catch (err) {
+    res
+      .status(409)
+      .json({ error: `failed to delete record with webhook id: ${webhookId}` });
+    throw err;
+  } finally {
+    dbConnection.release();
+  }
+  return res.status(204).end();
 });
 
 router.get("/logout", async (req, res) => {

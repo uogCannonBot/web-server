@@ -50,19 +50,24 @@ passport.use(
       if (!dbConnection) {
         return done({ error: "Failed to connect to database" }, profile);
       }
-      const [userRows, userCols] = await dbConnection.query(
-        "SELECT * FROM users WHERE user_id = ?",
-        [profile.id]
-      );
-
-      // IF USER DNE in User DB, Add them to the database
-      if (!userRows || userRows.length === 0) {
-        await dbConnection.query(
-          "INSERT INTO users (user_id, avatar_id, email) VALUES (?, ?, ?)",
-          [profile.id, profile.avatar, profile.email]
+      try {
+        const [userRows, userCols] = await dbConnection.query(
+          "SELECT * FROM users WHERE user_id = ?",
+          [profile.id]
         );
+
+        // IF USER DNE in User DB, Add them to the database
+        if (!userRows || userRows.length === 0) {
+          await dbConnection.query(
+            "INSERT INTO users (user_id, avatar_id, email) VALUES (?, ?, ?)",
+            [profile.id, profile.avatar, profile.email]
+          );
+        }
+      } catch (err) {
+        throw err;
+      } finally {
+        dbConnection.release();
       }
-      // IF USER EXISTS, JUST FINISH
       // call done to complete authentication
       return done(null, profile);
     }

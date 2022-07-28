@@ -4,7 +4,7 @@
   "main": "app.js",
   "scripts": {
     "dev": "NODE_ENV=development nodemon app.js",
-    "init": "node models/dbInit.js",
+    "init": "NODE_ENV=development node models/dbInit.js",
     "shutdown": "pm2 stop app && pm2 delete app && pm2 save",
     "deploy": "NODE_ENV=production pm2 start app.js --log ./logs.txt --time && pm2 save"
   },
@@ -23,7 +23,8 @@
     "morgan": "^1.10.0",
     "mysql2": "^2.3.3",
     "passport": "^0.6.0",
-    "passport-discord": "^0.1.4"
+    "passport-discord": "^0.1.4",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.16"

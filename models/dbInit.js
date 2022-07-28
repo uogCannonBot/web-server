@@ -29,11 +29,11 @@ async function main() {
     );
     await connection.execute(
       // webhook table
-      "CREATE TABLE IF NOT EXISTS webhooks (webhook_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, user_id BIGINT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, hook_url TINYTEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(user_id))"
+      "CREATE TABLE IF NOT EXISTS webhooks (webhook_id VARCHAR(255) NOT NULL PRIMARY KEY, user_id BIGINT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, hook_url TINYTEXT NOT NULL, name TINYTEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(user_id))"
     );
     await connection.execute(
       // webhook-options table
-      "CREATE TABLE IF NOT EXISTS webhookOptions (user_id BIGINT NOT NULL, webhook_id INT NOT NULL, house_type INT NOT NULL, listing_type INT NOT NULL, sublet INT NOT NULL, bedrooms INT NOT NULL, price_range INT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(user_id), FOREIGN KEY (webhook_id) REFERENCES webhooks(webhook_id))"
+      "CREATE TABLE IF NOT EXISTS webhookOptions (user_id BIGINT NOT NULL, webhook_id VARCHAR(255) NOT NULL, house_type INT, listing_type INT, sublet INT, bedrooms INT, price_range INT, FOREIGN KEY (user_id) REFERENCES users(user_id), FOREIGN KEY (webhook_id) REFERENCES webhooks(webhook_id))"
     );
 
     console.log("dbInit.js: Successfully initialized all tables");

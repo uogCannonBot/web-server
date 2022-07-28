@@ -17,6 +17,14 @@ module.exports = {
         database: "cannon",
       });
 
+      pool.on("acquire", function (connection) {
+        console.log(`Connection ${connection.threadId} acquired`);
+      });
+
+      pool.on("release", function (connection) {
+        console.log(`Connection ${connection.threadId} released`);
+      });
+
       console.log("dbConnect.js: Successfully connected to MySQL server");
     } catch (err) {
       console.log("dbConnect.js: Failed to connect to database");

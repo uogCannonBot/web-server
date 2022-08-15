@@ -3,41 +3,124 @@
 "use strict";
 
 const { WebhookClient } = require("discord.js");
-
-// to be transferred into a database of users -> webhook urls in mysql,
-// for now going to hard-code until Discord API is hooked up to the server
-const urls = [
-  "https://discord.com/api/webhooks/972880881335271465/FfDqG5_54FaFLfsJsre0czOnUaD_Y_4CsxmBXA9EUt-lMhTSpP86eIu3NAMtrMnqFd6D",
-];
-
-let clients = [];
+const filterWebhooks = require("./filterWebhooks");
+const db = require("../models/dbConnect");
 
 module.exports = {
   connect: async function () {
-    urls.forEach(async (url) => {
-      try {
-        const webhookClient = new WebhookClient(
-          { url },
-          { restRequestTimeout: 30000 }
-        );
-        webhookClient
-          .edit({
-            name: "TheCannon",
-            avatar: "./public/cannon.png",
-          })
-          .catch(console.error);
-        clients.push(webhookClient);
-      } catch (err) {
-        console.log(`Failed to connect to Webhook with url: ${url}`);
-      }
-    });
-    if (clients.length > 0) {
-      console.log("Successfully connected to at least ONE webhook");
-    } else {
-      console.log("Failed to connect to ANY webhook");
+    const dbConnection = await db.get().getConnection();
+    if (!dbConnection) {
+      throw new Error(
+        "webhook.js: unable to connect to database for webhook retrieval"
+      );
     }
+
+    // get all the urls
+    try {
+      const [webhooks, fields] = await dbConnection.query(
+        "SELECT * FROM webhooks"
+      );
+      webhooks.forEach(async (webhook) => {
+        try {
+          const url = webhook.hook_url;
+          const webhookClient = new WebhookClient(
+            { url },
+            { restRequestTimeout: 30000 }
+          );
+          webhookClient
+            .edit({
+              name: "TheCannon",
+              avatar: "./public/cannon.png",
+            })
+            .catch(console.error);
+        } catch (err) {
+          throw err;
+        }
+      });
+    } catch (err) {
+      throw err;
+    } finally {
+      dbConnection.release();
+    }
+    // upon success, nothing will log
   },
-  get: function () {
+  get: async function () {
+    let clients = [];
+    const dbConnection = await db.get().getConnection();
+    if (!dbConnection) {
+      throw new Error(
+        "webhook.js at get(): unable to acquire database connection for get"
+      );
+    }
+    try {
+      const [webhooks, fields] = await dbConnection.query(
+        "SELECT * FROM webhooks",
+        []
+      );
+      clients = JSON.parse(JSON.stringify(webhooks));
+    } catch (err) {
+      throw err;
+    } finally {
+      await dbConnection.release();
+    }
     return clients;
+  },
+  filterClients: async function (listing) {
+    // check empty listing
+    if (!listing) {
+      throw new Error(
+        "webhook.js at filterClients: no listing was provided to filter through"
+      );
+    }
+
+    // TODO: check valid listing (follows the structure)
+
+    // connect to database
+    const dbConnection = await db.get().getConnection();
+    if (!dbConnection) {
+      throw new Error(
+        "webhook.js at \n\tmodule.exports.filterClients: unable to connect to database for filtering"
+      );
+    }
+
+    // store the filtered webhooks
+    let filteredWebhooks = [];
+
+    try {
+      // first, get all of the webhooks and their options combined
+      const [webhooks, fields] = await dbConnection.query(
+        "SELECT * FROM webhooks INNER JOIN webhookOptions ON (webhooks.webhook_id=webhookOptions.webhook_id AND webhooks.user_id=webhookOptions.user_id)",
+        []
+      );
+
+      // get the house listing from the database
+      const [house, houseFields] = await dbConnection.query(
+        "SELECT * FROM houses WHERE id = ?",
+        [listing.id]
+      );
+      if (!house || house.length === 0) {
+        throw new Error(
+          `webhook.js: house with id ${listing.id} does not exist in the HOUSES database`
+        );
+      } else if (house.length > 1) {
+        throw new Error(
+          `webhook.js: house with id ${listing.id} has duplicates in HOUSES database`
+        );
+      }
+      // compare each webhook to the house
+      filteredWebhooks = filterWebhooks(webhooks, house[0]);
+
+      // turn them all into clients
+      filteredWebhooks = filteredWebhooks.map((webhook) => {
+        webhook.client = new WebhookClient({ url: webhook.hook_url });
+        return webhook;
+      });
+    } catch (err) {
+      throw err;
+    } finally {
+      await dbConnection.release();
+    }
+
+    return filteredWebhooks;
   },
 };

@@ -11,6 +11,7 @@
   "author": "Jason Kyle Tan",
   "license": "MIT",
   "dependencies": {
+    "accounting-js": "^1.1.1",
     "axios": "^0.26.1",
     "bcryptjs": "^2.4.3",
     "cheerio": "^1.0.0-rc.10",

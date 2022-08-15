@@ -3,9 +3,10 @@
 const wb = require("./webhook");
 const { MessageEmbed } = require("discord.js");
 
-module.exports = function sendWcMessage(listing) {
-  // get all the webhook clients
-  const webhookClients = wb.get();
+module.exports = async function sendWcMessage(listing) {
+  // get all related webhook clients
+  const webhookClients = await wb.filterClients(listing);
+  // console.log("webhookClients: ", webhookClients);
 
   // Create an embed with all the information from the listing
   let embed;
@@ -54,11 +55,11 @@ module.exports = function sendWcMessage(listing) {
         iconURL: "attachment://cannon.png",
       });
   } catch (err) {
-    console.error("Error found: ", err);
-    return false;
+    throw err;
   }
-  webhookClients.forEach(async (client) => {
+  webhookClients.forEach(async (webhook) => {
     // send the message
+    const { client } = webhook;
     return await client
       .send({
         embeds: [embed],

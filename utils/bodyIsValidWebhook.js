@@ -12,6 +12,7 @@ const bodyIsValidWebhook = (body) => {
     Number.isInteger(options.house_type) &&
     !(options.house_type >= 1 && options.house_type <= 5)
   ) {
+    console.log("bodyIsValidWebhook.js: failed house");
     return false;
   }
 
@@ -19,8 +20,9 @@ const bodyIsValidWebhook = (body) => {
   if (
     options.listing_type !== null &&
     Number.isInteger(options.listing_type) &&
-    !(options.listing_type === 1 || options.listing_type === 2)
+    !(options.listing_type === 0 || options.listing_type === 1)
   ) {
+    console.log("bodyIsValidWebhook.js: failed listing");
     return false;
   }
 
@@ -28,24 +30,29 @@ const bodyIsValidWebhook = (body) => {
   if (
     options.sublet !== null &&
     Number.isInteger(options.sublet) &&
-    !(options.sublet === 1 || options.sublet === 2)
+    !(options.sublet === 0 || options.sublet === 1)
   ) {
+    console.log("bodyIsValidWebhook.js: failed on sublet");
     return false;
   }
-  // check valid bedrooms options (between options 1-5 if provided)
-  if (
-    options.bedroom !== null &&
-    Number.isInteger(options.bedrooms) &&
-    !(options.bedrooms >= 1 && options.bedrooms <= 5)
-  ) {
+  // check valid bedrooms options
+  if (options.bedrooms !== null && !Number.isInteger(options.bedrooms)) {
+    console.log("bodyIsValidWebhook.js: failed bedroom");
     return false;
   }
-  // check valid price range options (between options 1-6 if provided)
+  // check price ranges
   if (
-    options.price_range !== null &&
-    Number.isInteger(options.price_range) &&
-    !(options.price_range >= 1 && options.price_range <= 6)
+    options.low_price_range !== null &&
+    !Number.isInteger(options.low_price_range)
   ) {
+    console.log("bodyIsValidWebhook.js: low price failed");
+    return false;
+  }
+  if (
+    options.high_price_range !== null &&
+    !Number.isInteger(options.high_price_range)
+  ) {
+    console.log("bodyIsValidWebhook.js: high price failed");
     return false;
   }
 

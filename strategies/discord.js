@@ -1,11 +1,4 @@
 /**
- * TODO: Once a user has been authenticated, check if they
- * are already in the users database. IF NOT, add, otherwise continue
- * to grant them privileges.
- *
- * TODO: Privileges are contained within the following scopes:
- * - creating webhooks to be attached to servers
- * - modifying options of webhooks
  *
  * TODO: Change the process in which notifications are sent.
  * Go through all webhooks -> Go through each of their options -> Send notification if option satisfies any of the listings found TODAY

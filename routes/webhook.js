@@ -2,7 +2,7 @@ const { Router } = require("express");
 const checkAuthenticated = require("../middleware/checkAuthenticated");
 const db = require("../models/dbConnect");
 const bodyIsValidWebhook = require("../utils/bodyIsValidWebhook");
-const { v4: uuidv4 } = require("uuid");
+const { WebhookClient } = require("discord.js");
 
 const router = new Router();
 
@@ -42,9 +42,6 @@ router.get("/", checkAuthenticated, async (req, res) => {
 
   // return the webhooks
   return res.json({
-    message: "TODO: Dashboard",
-    session: req.session,
-    id,
     webhooks,
   });
 });
@@ -65,7 +62,6 @@ router.post("/create", async (req, res) => {
   const { body } = req;
 
   /**
-   * For all settings, 0 = ALL aka don't filter
    * Expected body format: ONE OF EACH
    *
    * {
@@ -79,24 +75,24 @@ router.post("/create", async (req, res) => {
    *          4 - shared a/c
    *          5 - bachelor apt
    *       listing_type:
-   *          1 - offering
-   *          2 - wanted
+   *          0 - offering
+   *          1 - wanted
    *       sublet:
    *          1 - yes
-   *          2 - no
+   *          0 - no
    *       bedrooms:
+   *          null - all bedrooms
    *          1 - 1
    *          2 - 2
    *          3 - 3
    *          4 - 4
    *          5 - 5+
-   *       price_range:
-   *          1 - $0 - 199.99
-   *          2 - $200 - 399.99
-   *          3 - $400 - 599.99
-   *          4 - $600 - 799.99
-   *          5 - $800 - 999.99
-   *          6 - >= $1000
+   *       low_price_range:
+   *          null - from zero
+   *          number - from number
+   *       high_price_range:
+   *          null - to greater than zero (or if low is set, then it's greater than low)
+   *          number - to number
    *    }
    * }
    */
@@ -116,24 +112,26 @@ router.post("/create", async (req, res) => {
   // wrap all database queries inside a try-catch despite having express-async-errors
   try {
     // create a new webhook
-    const webhookId = uuidv4();
+    const { url } = body;
+    const webhook = new WebhookClient({ url });
     await dbConnection.query(
       "INSERT INTO webhooks (webhook_id, user_id, hook_url, name) VALUES (?, (SELECT user_id FROM users WHERE user_id = ?), ?, ?)",
-      [webhookId, id, body.url, body.name]
+      [webhook.id, id, webhook.url, body.name]
     );
 
     // attach it's corresponding options
     const { options } = body;
     await dbConnection.query(
-      "INSERT INTO webhookOptions (user_id, webhook_id, house_type, listing_type, sublet, bedrooms, price_range) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO webhookOptions (user_id, webhook_id, house_type, listing_type, sublet, bedrooms, low_price_range, high_price_range) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [
         id,
-        webhookId,
+        webhook.id,
         options.house_type,
         options.listing_type,
         options.sublet,
         options.bedrooms,
-        options.price_range,
+        options.low_price_range,
+        options.high_price_range,
       ]
     );
 
@@ -141,15 +139,13 @@ router.post("/create", async (req, res) => {
     return res.status(201).json({
       success: true,
       webhook: {
-        id: webhookId,
+        id: webhook.id,
         related_user: id.toString(),
         created_at: new Date().toJSON(),
       },
     });
   } catch (err) {
-    res
-      .status(502)
-      .json({ error: "failed to execute INSERT database queries" });
+    res.status(502).json({ error: err });
     throw err;
   } finally {
     // ALWAYS release the db connection once finished
@@ -171,6 +167,11 @@ router.put("/edit/:webhookId", async (req, res) => {
 
   // Get the webhook id from url
   const { webhookId } = req.params;
+  if (!webhookId) {
+    return res
+      .status(404)
+      .json({ error: "no webhook id was provided to delete" });
+  }
 
   // Get the request body
   const { body } = req;
@@ -189,27 +190,41 @@ router.put("/edit/:webhookId", async (req, res) => {
   }
 
   // update both tables accordingly, expecting same json as create
+  console.log(options);
   try {
-    await dbConnection.query(
-      "UPDATE webhooks SET name = ?, hook_url = ? WHERE webhook_id = ? AND user_id = ?",
-      [body.name, body.url, webhookId, id]
+    const [webhook, webhookCols] = await dbConnection.query(
+      "SELECT * FROM webhooks WHERE webhook_id = ? AND user_id = ?",
+      [webhookId, id]
     );
+    if (!webhook || webhook.length === 0) {
+      throw new Error(
+        "webhook.js: trying to update a webhook that does not exist"
+      );
+    }
+
     await dbConnection.query(
-      "UPDATE webhookOptions SET house_type = ?, listing_type = ?, sublet = ?, bedrooms = ?, price_range = ? WHERE webhook_id = ? AND user_id = ?",
+      "UPDATE webhooks SET name = ? WHERE webhook_id = ? AND user_id = ?",
+      [body.name, webhookId, id]
+    );
+
+    await dbConnection.query(
+      "UPDATE webhookOptions SET house_type = ?, listing_type = ?, sublet = ?, bedrooms = ?, low_price_range = ?, high_price_range = ? WHERE webhook_id = ? AND user_id = ?",
       [
         options.house_type,
         options.listing_type,
         options.sublet,
         options.bedrooms,
-        options.price_range,
+        options.low_price_range,
+        options.high_price_range,
         webhookId,
         id,
       ]
     );
   } catch (err) {
-    res
-      .status(409)
-      .json({ error: `failed to update record with webhook id: ${webhookId}` });
+    res.status(409).json({
+      message: `failed to update record with webhook id: ${webhookId}`,
+      error: err.message,
+    });
     throw err;
   } finally {
     dbConnection.release();

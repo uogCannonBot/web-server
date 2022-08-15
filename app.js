@@ -15,7 +15,7 @@ const { checkAdmin } = require("./middleware/checkAdmin");
 const discordRoute = require("./routes/auth/discord");
 const listingsRoute = require("./routes/admin");
 const loginRoute = require("./routes/login");
-const dashboardRoute = require("./routes/dashboard");
+const webhookRoute = require("./routes/webhook");
 const dbPool = require("./models/dbConnect");
 const wb = require("./utils/webhook");
 
@@ -27,6 +27,11 @@ require("./strategies/discord");
 
 // Middleware
 app.use(express.json());
+app.use(
+  express.urlencoded({
+    extended: false,
+  })
+);
 app.use(cors({ credentials: true }));
 // app.use(express.static("public"));
 app.use(
@@ -47,7 +52,7 @@ app.all("/admin/*", checkAdmin, (request, response, next) => {
 });
 app.use("/api/auth", discordRoute);
 app.use("/admin", listingsRoute);
-app.use("/dashboard", dashboardRoute);
+app.use("/api/webhook", webhookRoute);
 app.use(loginRoute);
 
 app.use((req, res) => {

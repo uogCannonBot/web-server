@@ -3,6 +3,7 @@
 const { Router } = require("express");
 const db = require("../models/dbConnect");
 const sendWcMessage = require("../utils/sendWcMessage");
+const { v4: uuidv4 } = require("uuid");
 
 const router = new Router();
 
@@ -42,27 +43,14 @@ router.post("/listings", async (request, response) => {
       listingType,
       listing.price,
     ]);
-  } catch (err) {
-    throw err;
-  } finally {
-    dbConnection.release();
-  }
-  // console.log("returned: ", rows);
 
-  // If listing DNE, Add the listing to the data
-  if (!rows || rows.length === 0) {
-    try {
-      dbConnection = await db.get().getConnection();
-      if (!dbConnection) {
-        return response.status(500).json({
-          success: false,
-          message: "Unable to connect to perform queries for some reason",
-        });
-      }
-
+    // If listing DNE, Add the listing to the data
+    if (!rows || rows.length === 0) {
+      listing.id = uuidv4(); // add a unique id to the listing itself
       const insertQuery =
-        "INSERT INTO houses (post_date, available, l_type, h_type, address, distance, sublet, rooms, price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        "INSERT INTO houses (id, post_date, available, l_type, h_type, address, distance, sublet, rooms, price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
       const [resHeader, colHeader] = await dbConnection.query(insertQuery, [
+        listing.id,
         listing.postDate,
         listing.available,
         listingType,
@@ -105,10 +93,12 @@ router.post("/listings", async (request, response) => {
       });
 
       // After the listing has been added to the `houses` table, add it's corresponding features to the `houseFeatures` table
+      features.id = uuidv4();
       await dbConnection.query(
-        "INSERT INTO houseFeatures (house_id, pets_allowed, smoking, parking_inc, laundry, cooking) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO houseFeatures (id, house_id, pets_allowed, smoking, parking_inc, laundry, cooking) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
-          resHeader.insertId,
+          features.id,
+          listing.id,
           features.petsAllowed,
           features.smoking,
           features.parkingInc,
@@ -116,38 +106,35 @@ router.post("/listings", async (request, response) => {
           features.cooking,
         ]
       );
-    } catch (err) {
-      throw err;
-    } finally {
-      dbConnection.release();
-    }
 
-    // Send a webhook message that a new listing is added to Discord
-    try {
-      sendWcMessage(listing);
-    } catch (err) {
-      console.log(
-        "admin.js: An error occurred when trying to send a listing to the Discord WebHook"
-      );
-      await dbConnection.release();
-      return response.status(500).json({
-        success: false,
-        error: err,
+      // Send a webhook message that a new listing is added to Discord
+      try {
+        sendWcMessage(listing);
+      } catch (err) {
+        console.log(err);
+        return response.status(500).json({
+          success: false,
+          error:
+            "admin.js: An error occurred when trying to send a listing to the Discord WebHook",
+        });
+      }
+
+      await response.status(201).json({
+        success: true,
+        message: "successfully added a new listing",
+        listing,
+      });
+    } else {
+      // return early if the listing exists already
+      await response.status(200).json({
+        success: true,
+        message: "listing already exists",
       });
     }
-
-    await response.status(201).json({
-      success: true,
-      message:
-        "successfully added a new listing with the id: " + resHeader.insertId,
-      listing,
-    });
-  } else {
-    // return early if the listing exists already
-    await response.status(200).json({
-      success: true,
-      message: "listing already exists",
-    });
+  } catch (err) {
+    throw err;
+  } finally {
+    dbConnection.release();
   }
 });
 

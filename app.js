@@ -12,9 +12,8 @@ const morgan = require("morgan");
 
 // sub-routines/classes
 const { checkAdmin } = require("./middleware/checkAdmin");
-const discordRoute = require("./routes/auth/discord");
 const listingsRoute = require("./routes/admin");
-const loginRoute = require("./routes/login");
+const authRoute = require("./routes/auth/login");
 const webhookRoute = require("./routes/webhook");
 const dbPool = require("./models/dbConnect");
 const wb = require("./utils/webhook");
@@ -33,7 +32,6 @@ app.use(
   })
 );
 app.use(cors({ credentials: true }));
-// app.use(express.static("public"));
 app.use(
   session({
     secret: config.app.SECRET,
@@ -47,13 +45,12 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Routes
+app.use("/api/auth", authRoute);
 app.all("/admin/*", checkAdmin, (request, response, next) => {
   next();
 });
-app.use("/api/auth", discordRoute);
-app.use("/admin", listingsRoute);
+app.use("/api/admin", listingsRoute);
 app.use("/api/webhook", webhookRoute);
-app.use(loginRoute);
 
 app.use((req, res) => {
   res.status(404).send({ error: "unknown endpoint" });

@@ -1,0 +1,51 @@
+const { Router } = require("express");
+const { app } = require("../../utils/config");
+const passport = require("passport");
+
+const router = new Router();
+
+router.get("/login/success", (req, res) => {
+  if (req.user) {
+    res.status(200).json({
+      success: true,
+      message: "successful",
+      user: req.user,
+    });
+  }
+});
+
+router.get("/login/failed", (req, res) => {
+  res.status(401).json({
+    success: false,
+    message: "failure",
+  });
+});
+
+router.get("/logout", async (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      return next(err);
+    }
+    res.redirect("/");
+  });
+});
+
+// GET to authenticate a user with discord
+router.get(
+  "/discord",
+  passport.authenticate("discord", { permissions: 536870912 }),
+  (req, res) => {
+    res.send(200);
+  }
+);
+
+// GET to redirect the user once authenticated
+router.get(
+  "/discord/redirect",
+  passport.authenticate("discord", {
+    successRedirect: app.URL,
+    failureRedirect: "/login/failed",
+  })
+);
+
+module.exports = router;

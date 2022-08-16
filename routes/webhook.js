@@ -6,6 +6,8 @@ const { WebhookClient } = require("discord.js");
 
 const router = new Router();
 
+// add checkAuthenticated to all routes once done developing
+
 /**
  * Request Type - GET
  * Purpose - Fetch all the users webhooks and return them as an array
@@ -284,15 +286,6 @@ router.delete("/delete/:webhookId", async (req, res) => {
     dbConnection.release();
   }
   return res.status(204).end();
-});
-
-router.get("/logout", async (req, res) => {
-  req.logout((err) => {
-    if (err) {
-      return next(err);
-    }
-    res.redirect("/login");
-  });
 });
 
 module.exports = router;

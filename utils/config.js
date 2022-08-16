@@ -6,6 +6,10 @@ const config = {
     HASH: process.env.HASH,
     PASSWORD: process.env.PASSWORD,
     SECRET: process.env.SECRET,
+    URL:
+      process.env.NODE_ENV === "development"
+        ? process.env.LOCAL_URL
+        : process.env.PRODUCTION_URL,
   },
   database: {
     USER:

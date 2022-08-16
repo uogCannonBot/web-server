@@ -73,8 +73,6 @@ module.exports = {
       );
     }
 
-    // TODO: check valid listing (follows the structure)
-
     // connect to database
     const dbConnection = await db.get().getConnection();
     if (!dbConnection) {

@@ -1,0 +1,11 @@
+body {
+  margin: 0;
+}
+
+.fullscreen-wrap {
+  height: 100vh;
+}
+
+.link {
+  text-decoration: none;
+}

@@ -6,12 +6,13 @@ const router = new Router();
 
 router.get("/login/success", (req, res) => {
   if (req.user) {
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "successful",
       user: req.user,
     });
   }
+  return res.redirect("/api/auth/login/failed");
 });
 
 router.get("/login/failed", (req, res) => {
@@ -26,7 +27,7 @@ router.get("/logout", async (req, res) => {
     if (err) {
       return next(err);
     }
-    res.redirect("/");
+    return res.json({ success: true });
   });
 });
 

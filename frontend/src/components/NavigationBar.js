@@ -17,12 +17,18 @@ import DarkModeIcon from "@mui/icons-material/DarkMode";
 import { useTheme } from "@mui/material/styles";
 
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 /**
  *
  * @from https://mui.com/material-ui/react-app-bar/#main-content
  */
-export default function NavigationBar({ user, setIsDarkTheme, isDarkTheme }) {
+export default function NavigationBar({
+  user,
+  setUser,
+  setIsDarkTheme,
+  isDarkTheme,
+}) {
   const theme = useTheme();
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -33,6 +39,10 @@ export default function NavigationBar({ user, setIsDarkTheme, isDarkTheme }) {
   };
 
   const handleClose = () => {
+    axios.get("http://localhost:8080/api/auth/logout", {
+      withCredentials: true,
+    });
+    setUser(null);
     setAnchorEl(null);
   };
 
@@ -59,7 +69,7 @@ export default function NavigationBar({ user, setIsDarkTheme, isDarkTheme }) {
           {user && (
             <>
               <Typography component="div" sx={{ mt: 0.4 }}>
-                username #0000
+                {user.username} #{user.discriminator}
               </Typography>
 
               <div>

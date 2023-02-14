@@ -1,9 +1,9 @@
 import "./App.css";
 import NavigationBar from "./components/NavigationBar";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import { Routes, Route } from "react-router-dom";
+import Login from "./components/Login";
+import Dashboard from "./components/Dashboard";
 import { ThemeProvider, createTheme } from "@mui/material";
+import Container from "@mui/material/Container";
 import CssBaseline from "@mui/material/CssBaseline";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useState, useEffect } from "react";
@@ -25,7 +25,7 @@ export default function App() {
   // check users dark/light mode preference
   const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
 
-  const [user, setUser] = useState(2);
+  const [user, setUser] = useState(0);
   const [isDarkTheme, setIsDarkTheme] = useState(prefersDarkMode ? 1 : 0);
   const theme = isDarkTheme ? darkTheme : lightTheme;
 
@@ -34,11 +34,12 @@ export default function App() {
     // check if user is authenticated
     const getUser = () => {
       axios
-        .get("http:localhost:8080/api/auth/login/success", {
+        .get("http://localhost:8080/api/auth/login/success", {
           withCredentials: true,
         })
         .then((response) => {
-          if (response.status === 200) return response.json();
+          console.log(response);
+          if (response.status === 200) return response.data;
           throw new Error("authentication has been failed!");
         })
         .then((resObject) => {
@@ -50,22 +51,28 @@ export default function App() {
     };
     getUser();
   }, []);
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <div className="fullscreen-wrap">
-        <NavigationBar
-          user={user}
-          setIsDarkTheme={setIsDarkTheme}
-          isDarkTheme={isDarkTheme}
-        />
-        <Routes>
-          <Route path="/" element={<Login />}>
-            <Route path="/dashboard" element={<Dashboard user={user} />} />
-          </Route>
-        </Routes>
-      </div>
+      {/* <div className="fullscreen-wrap"> */}
+      <NavigationBar
+        user={user}
+        setUser={setUser}
+        setIsDarkTheme={setIsDarkTheme}
+        isDarkTheme={isDarkTheme}
+      />
+      {}
+      <Container
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          height: "100vh",
+          justifyContent: "center",
+        }}
+      >
+        {user ? <Dashboard user={user} /> : <Login />}
+      </Container>
+      {/* </div> */}
     </ThemeProvider>
   );
 }

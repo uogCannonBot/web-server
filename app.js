@@ -31,7 +31,7 @@ app.use(
     extended: false,
   })
 );
-app.use(cors({ credentials: true }));
+app.use(cors({ origin: config.app.URL, credentials: true }));
 app.use(
   session({
     secret: config.app.SECRET,

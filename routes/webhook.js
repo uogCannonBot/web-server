@@ -33,6 +33,9 @@ router.get("/", checkAuthenticated, async (req, res) => {
       "SELECT * FROM webhooks WHERE user_id = ?",
       [id]
     );
+    res.json({
+      webhooks,
+    });
   } catch (err) {
     res
       .status(400)
@@ -41,11 +44,6 @@ router.get("/", checkAuthenticated, async (req, res) => {
   } finally {
     await dbConnection.release();
   }
-
-  // return the webhooks
-  return res.json({
-    webhooks,
-  });
 });
 
 /**

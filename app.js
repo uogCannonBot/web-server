@@ -46,9 +46,9 @@ app.use(passport.session());
 
 // Routes
 app.use("/api/auth", authRoute);
-app.all("/admin/*", checkAdmin, (request, response, next) => {
-  next();
-});
+// app.all("/admin/*", checkAdmin, (request, response, next) => {
+//   next();
+// });
 app.use("/api/admin", listingsRoute);
 app.use("/api/webhook", webhookRoute);
 

@@ -35,7 +35,7 @@ module.exports = async function sendWcMessage(listing) {
           )})`,
         },
         { name: "🚀 Distance", value: listing.distance },
-        { name: "🛌 Rooms", value: listing.rooms, inline: true },
+        { name: "🛌 Rooms", value: listing.rooms.toString(), inline: true },
         { name: "💵 Price", value: listing.price, inline: true },
         {
           name: "Features",

@@ -17,7 +17,7 @@ async function main() {
     );
     await connection.execute(
       // house-listings table
-      "CREATE TABLE IF NOT EXISTS houses (id VARCHAR(255) NOT NULL PRIMARY KEY, post_date DATETIME NOT NULL, available DATETIME NOT NULL, l_type BOOLEAN NOT NULL, h_type VARCHAR(50) NOT NULL, address VARCHAR(250) NOT NULL, distance VARCHAR(8) NOT NULL, sublet BOOLEAN NOT NULL, rooms INT NOT NULL, price VARCHAR(50) NOT NULL)"
+      'CREATE TABLE IF NOT EXISTS houses (id VARCHAR(255) NOT NULL PRIMARY KEY, post_date DATE NOT NULL, available DATE NOT NULL, l_type BOOLEAN NOT NULL, h_type ENUM ("House", "Shared House", "Apartment/Condo", "Shared Apartment/Condo", "Bachelor Apartment") NOT NULL, address VARCHAR(250) NOT NULL, distance VARCHAR(8) NOT NULL, sublet BOOLEAN NOT NULL, rooms INT NOT NULL, price VARCHAR(50) NOT NULL)'
     );
     await connection.execute(
       // house-features table
@@ -33,7 +33,7 @@ async function main() {
     );
     await connection.execute(
       // webhook-options table
-      "CREATE TABLE IF NOT EXISTS webhookOptions (user_id BIGINT NOT NULL, webhook_id VARCHAR(255) NOT NULL, house_type INT, listing_type INT, sublet INT, bedrooms INT, low_price_range INT, high_price_range INT, FOREIGN KEY (user_id) REFERENCES users(user_id), FOREIGN KEY (webhook_id) REFERENCES webhooks(webhook_id))"
+      'CREATE TABLE IF NOT EXISTS webhookOptions (user_id BIGINT NOT NULL, webhook_id VARCHAR(255) NOT NULL, house_type ENUM ("House", "Shared House", "Apartment/Condo", "Shared Apartment/Condo", "Bachelor Apartment"), listing_type INT, sublet INT, bedrooms INT, low_price_range INT, high_price_range INT, FOREIGN KEY (user_id) REFERENCES users(user_id), FOREIGN KEY (webhook_id) REFERENCES webhooks(webhook_id))'
     );
 
     console.log("dbInit.js: Successfully initialized all tables");

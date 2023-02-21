@@ -4,6 +4,8 @@ const { Router } = require("express");
 const db = require("../models/dbConnect");
 const sendWcMessage = require("../utils/sendWcMessage");
 const { v4: uuidv4 } = require("uuid");
+const res = require("express/lib/response");
+const bodyIsValidListing = require("../utils/bodyIsValidListing");
 
 const router = new Router();
 
@@ -18,12 +20,19 @@ router.post("/listings", async (request, response) => {
 
   // Get the listing from the request body
   const { listing } = request.body;
-  listing.postDate = new Date(listing.postDate); // parse the date
-  listing.available = new Date(listing.available); // parse the date
-  const listingType = listing.listingType === "Offering" ? 0 : 1; // get the type of listing (Offering/Wanted)
-  // console.log(listing);
 
-  // Check if the listing exists in the database via postDate, available, listingType, address, price
+  // validate the input and listing converted
+  console.log(listing);
+  const { validateSuccess, validateMessage } = bodyIsValidListing(listing);
+  if (!validateSuccess) {
+    console.log({ validateSuccess, validateMessage });
+    return response.status(400).json({
+      success: validateSuccess,
+      message: validateMessage,
+    });
+  }
+  console.log("validaiton: ", listing);
+
   let dbConnection = await db.get().getConnection(); // get the database connection
   if (!dbConnection) {
     return response.status(500).json({
@@ -34,31 +43,38 @@ router.post("/listings", async (request, response) => {
 
   // wrap queries into try-catches
   try {
+    // Check if the listing exists in the database
+    // we only want duplicates if the following changes
+    // address, availability date, type of listing, price, distance, bedrooms
     const selectQuery =
-      "SELECT * FROM houses WHERE (post_date = ? AND address = ? AND available = ? AND l_type = ? AND price = ?)";
+      "SELECT * FROM houses WHERE (address = ? AND available = ? AND l_type = ? AND price = ? AND distance = ? AND rooms = ?)";
     const [rows, fields] = await dbConnection.query(selectQuery, [
-      listing.postDate,
       listing.address,
-      listing.available,
-      listingType,
+      `${listing.available.getUTCFullYear()}/${
+        listing.available.getUTCMonth() + 1
+      }/${listing.available.getUTCDate()}`, // YYYY:MM:DD
+      listing.listingType,
       listing.price,
+      listing.distance,
+      listing.rooms,
     ]);
 
     // If listing DNE, Add the listing to the data
     if (!rows || rows.length === 0) {
       listing.id = uuidv4(); // add a unique id to the listing itself
+      // console.log(listing);
       const insertQuery =
         "INSERT INTO houses (id, post_date, available, l_type, h_type, address, distance, sublet, rooms, price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
       const [resHeader, colHeader] = await dbConnection.query(insertQuery, [
         listing.id,
         listing.postDate,
         listing.available,
-        listingType,
+        listing.listingType,
         listing.houseType,
         listing.address,
         listing.distance,
-        listing.sublet === "No" ? 0 : 1,
-        parseInt(listing.rooms),
+        listing.sublet,
+        listing.rooms,
         listing.price,
       ]);
 
@@ -132,7 +148,7 @@ router.post("/listings", async (request, response) => {
       });
     }
   } catch (err) {
-    throw err;
+    console.error(err);
   } finally {
     dbConnection.release();
   }

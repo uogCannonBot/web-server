@@ -18,7 +18,7 @@ router.get("/login/success", (req, res) => {
 router.get("/login/failed", (req, res) => {
   res.status(401).json({
     success: false,
-    message: "failure",
+    message: "login was cancelled or failed abruptly",
   });
 });
 
@@ -45,7 +45,7 @@ router.get(
   "/discord/redirect",
   passport.authenticate("discord", {
     successRedirect: app.URL,
-    failureRedirect: "/login/failed",
+    failureRedirect: "/api/auth/login/failed",
   })
 );
 

@@ -1,7 +1,24 @@
+const {isValidDate} = require("./helpers");
+
+const MAX_WEBHOOK_NAME_LENGTH = 84;
 const bodyIsValidWebhook = (body) => {
+  const validation = {
+    validateSuccess: true,
+    validateMessage: "",
+  }
+
   // check valid name
   if (!body.name || body.name === "") {
-    return false;
+    validation.validateSuccess = false;
+    validation.validateMessage = "name was not provided for webhook"
+    return validation
+  }
+
+  // check name does not exceed certain length
+  if (body.name.length > MAX_WEBHOOK_NAME_LENGTH){
+    validation.validateSuccess = false;
+    validation.validateMessage = `name is too long (max is ${MAX_WEBHOOK_NAME_LENGTH} characters)`
+    return validation
   }
 
   const { options } = body;
@@ -12,8 +29,9 @@ const bodyIsValidWebhook = (body) => {
     Number.isInteger(options.house_type) &&
     !(options.house_type >= 1 && options.house_type <= 5)
   ) {
-    console.log("bodyIsValidWebhook.js: failed house");
-    return false;
+    validation.validateSuccess = false;
+    validation.validateMessage = `housing type must be an integer between 1 and 5 [house, s(house), (apt/cnd), s(apt/cnd), b(apt)] if provided`
+    return validation
   }
 
   // check valid listing type (offering/wanted)
@@ -22,8 +40,9 @@ const bodyIsValidWebhook = (body) => {
     Number.isInteger(options.listing_type) &&
     !(options.listing_type === 0 || options.listing_type === 1)
   ) {
-    console.log("bodyIsValidWebhook.js: failed listing");
-    return false;
+    validation.validateSuccess = false;
+    validation.validateMessage = `listing type must either be Offering (0) or Wanted (1) if provided`
+    return validation
   }
 
   // check valid sublet options (yes/no)
@@ -32,31 +51,47 @@ const bodyIsValidWebhook = (body) => {
     Number.isInteger(options.sublet) &&
     !(options.sublet === 0 || options.sublet === 1)
   ) {
-    console.log("bodyIsValidWebhook.js: failed on sublet");
-    return false;
+    validation.validateSuccess = false;
+    validation.validateMessage = `sublet must either be Yes (1) or No (0) if provided`
+    return validation
   }
   // check valid bedrooms options
   if (options.bedrooms !== null && !Number.isInteger(options.bedrooms)) {
-    console.log("bodyIsValidWebhook.js: failed bedroom");
-    return false;
+    validation.validateSuccess = false;
+    validation.validateMessage = `bedrooms must be an integer value if provided`
+    return validation
   }
   // check price ranges
   if (
     options.low_price_range !== null &&
     !Number.isInteger(options.low_price_range)
   ) {
-    console.log("bodyIsValidWebhook.js: low price failed");
-    return false;
+    validation.validateSuccess = false;
+    validation.validateMessage = `low price range must be an integer value if provided`
+    return validation
   }
   if (
     options.high_price_range !== null &&
     !Number.isInteger(options.high_price_range)
   ) {
-    console.log("bodyIsValidWebhook.js: high price failed");
-    return false;
+    validation.validateSuccess = false;
+    validation.validateMessage = `high price range must be an integer value if provided`
+    return validation
   }
 
-  return true;
+  if (options.start_date == null && !isValidDate(new Date(options.start_date))){
+    validation.validateSuccess = false;
+    validation.validateMessage = `start date must be the format of YYYY:MM:DD if provided`
+    return validation
+  }
+
+  if (options.end_date == null && !isValidDate(new Date(options.end_date))){
+    validation.validateSuccess = false;
+    validation.validateMessage = `end date must be the format of YYYY:MM:DD if provided`
+    return validation
+  }
+
+  return validation;
 };
 
 module.exports = bodyIsValidWebhook;

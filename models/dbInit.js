@@ -33,7 +33,7 @@ async function main() {
     );
     await connection.execute(
       // webhook-options table
-      'CREATE TABLE IF NOT EXISTS webhookOptions (user_id BIGINT NOT NULL, webhook_id VARCHAR(255) NOT NULL, house_type ENUM ("House", "Shared House", "Apartment/Condo", "Shared Apartment/Condo", "Bachelor Apartment"), listing_type INT, sublet INT, bedrooms INT, low_price_range INT, high_price_range INT, FOREIGN KEY (user_id) REFERENCES users(user_id), FOREIGN KEY (webhook_id) REFERENCES webhooks(webhook_id))'
+      'CREATE TABLE IF NOT EXISTS webhookOptions (user_id BIGINT NOT NULL, webhook_id VARCHAR(255) NOT NULL, house_type ENUM ("House", "Shared House", "Apartment/Condo", "Shared Apartment/Condo", "Bachelor Apartment"), listing_type INT, sublet INT, bedrooms INT, low_price_range INT, high_price_range INT, start_date DATE, end_date DATE, FOREIGN KEY (user_id) REFERENCES users(user_id), FOREIGN KEY (webhook_id) REFERENCES webhooks(webhook_id))'
     );
 
     console.log("dbInit.js: Successfully initialized all tables");

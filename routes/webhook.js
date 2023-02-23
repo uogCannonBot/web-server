@@ -7,14 +7,17 @@ const { WebhookClient } = require("discord.js");
 const router = new Router();
 
 // add checkAuthenticated to all routes once done developing
+// remove later
+const USER_ID = BigInt("1005131091646087311")
 
 /**
  * Request Type - GET
  * Purpose - Fetch all the users webhooks and return them as an array
  */
-router.get("/", checkAuthenticated, async (req, res) => {
+router.get("/", async (req, res) => {
   // Get the current users id
-  const { id } = req.session.passport.user;
+  // const { id } = req.session.passport.user;
+  const id = USER_ID;
   if (!id) {
     return res
       .status(400)
@@ -29,6 +32,7 @@ router.get("/", checkAuthenticated, async (req, res) => {
 
   // Get all webhooks with the current user id
   try {
+    console.log(id)
     const [webhooks, fields] = await dbConnection.query(
       "SELECT * FROM webhooks WHERE user_id = ?",
       [id]
@@ -47,16 +51,63 @@ router.get("/", checkAuthenticated, async (req, res) => {
 });
 
 /**
+ * Request Type - GET
+ * Purpose - Fetch specific webhook
+ */
+router.get("/:webhookId", async (req, res) => {
+  // Get the current users id
+  // const { id } = req.session.passport.user;
+  const id = USER_ID;
+  if (!id) {
+    return res
+        .status(400)
+        .json({ error: "an invalid id was provided as a user" });
+  }
+
+  // Get the webhook id from url
+  const { webhookId } = req.params;
+  if (!webhookId) {
+    return res
+        .status(404)
+        .json({ error: "no webhook id was provided to get" });
+  }
+
+  // Get the database connection
+  const dbConnection = await db.get().getConnection();
+  if (!dbConnection) {
+    return res.status(500).json({ error: "failed to connect to database" });
+  }
+
+  // Get one webhook with the current user id and webhook id
+  try {
+    const [webhook, fields] = await dbConnection.query(
+        "SELECT * FROM webhooks INNER JOIN webhookOptions ON (webhooks.webhook_id=webhookOptions.webhook_id AND webhooks.user_id=webhookOptions.user_id);",
+        [id, webhookId]
+    );
+    res.json({
+      webhook,
+    });
+  } catch (err) {
+    res
+        .status(400)
+        .json({ error: `failed to get webhooks with user id: ${id}` });
+    throw err;
+  } finally {
+    await dbConnection.release();
+  }
+});
+
+/**
  * Request Type - POST
  * Purpose - Create a new webhook of a user
  */
-router.post("/create", async (req, res) => {
+router.post("/", async (req, res) => {
   // // Get the current users id
   // const id = BigInt(req.session.passport.user.id); // change later to CONST
   // if (!id) {
   //   return res.status(400).end();
   // }
-  const id = BigInt(231776440587255808); // delete later
+  const id = USER_ID; // delete later
 
   // Get the request body
   const { body } = req;
@@ -93,14 +144,21 @@ router.post("/create", async (req, res) => {
    *       high_price_range:
    *          null - to greater than zero (or if low is set, then it's greater than low)
    *          number - to number
+   *       start_date:
+   *          null - all listings before end_date
+   *          date - start date
+   *       end_date:
+   *          null - all listings beyond start_date
+   *          date - end date
    *    }
    * }
    */
   // check that the body provided was valid
-  if (!bodyIsValidWebhook(body)) {
+  const { validateSuccess, validateMessage } = bodyIsValidWebhook(body)
+  if (!validateSuccess) {
     return res
       .status(400)
-      .json({ error: "invalid webhook parameters was not provided" });
+      .json({ success: false, message: validateMessage });
   }
 
   // connect to the db pool
@@ -122,7 +180,7 @@ router.post("/create", async (req, res) => {
     // attach it's corresponding options
     const { options } = body;
     await dbConnection.query(
-      "INSERT INTO webhookOptions (user_id, webhook_id, house_type, listing_type, sublet, bedrooms, low_price_range, high_price_range) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO webhookOptions (user_id, webhook_id, house_type, listing_type, sublet, bedrooms, low_price_range, high_price_range, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         id,
         webhook.id,
@@ -132,6 +190,8 @@ router.post("/create", async (req, res) => {
         options.bedrooms,
         options.low_price_range,
         options.high_price_range,
+        options.start_date,
+        options.end_date,
       ]
     );
 
@@ -140,7 +200,6 @@ router.post("/create", async (req, res) => {
       success: true,
       webhook: {
         id: webhook.id,
-        related_user: id.toString(),
         created_at: new Date().toJSON(),
       },
     });
@@ -157,13 +216,13 @@ router.post("/create", async (req, res) => {
  * Request Type - PUT
  * Purpose - Update the settings/filters of a webhook
  */
-router.put("/edit/:webhookId", async (req, res) => {
+router.put("/:webhookId", async (req, res) => {
   // // Get the current users id
   // const id = BigInt(req.session.passport.user.id); // change later to CONST
   // if (!id) {
   //   return res.status(400).end();
   // }
-  const id = BigInt(231776440587255808); // delete later
+  const id = BigInt(USER_ID);
 
   // Get the webhook id from url
   const { webhookId } = req.params;
@@ -177,10 +236,12 @@ router.put("/edit/:webhookId", async (req, res) => {
   const { body } = req;
   const { options } = body;
 
-  if (!bodyIsValidWebhook(body)) {
+
+  const { validateSuccess, validateMessage } = bodyIsValidWebhook(body);
+  if (!validateSuccess) {
     return res
       .status(400)
-      .json({ error: "invalid webhook parameters was not provided" });
+      .json({ success: false, message: validateMessage });
   }
 
   // Get db connection
@@ -208,7 +269,7 @@ router.put("/edit/:webhookId", async (req, res) => {
     );
 
     await dbConnection.query(
-      "UPDATE webhookOptions SET house_type = ?, listing_type = ?, sublet = ?, bedrooms = ?, low_price_range = ?, high_price_range = ? WHERE webhook_id = ? AND user_id = ?",
+      "UPDATE webhookOptions SET house_type = ?, listing_type = ?, sublet = ?, bedrooms = ?, low_price_range = ?, high_price_range = ?, start_date = ?, end_date = ? WHERE webhook_id = ? AND user_id = ?",
       [
         options.house_type,
         options.listing_type,
@@ -216,6 +277,8 @@ router.put("/edit/:webhookId", async (req, res) => {
         options.bedrooms,
         options.low_price_range,
         options.high_price_range,
+        options.start_date,
+        options.end_date,
         webhookId,
         id,
       ]
@@ -236,13 +299,13 @@ router.put("/edit/:webhookId", async (req, res) => {
  * Request Type - DELETE
  * Purpose - Delete a webhook via id
  */
-router.delete("/delete/:webhookId", async (req, res) => {
+router.delete("/:webhookId", async (req, res) => {
   // // Get the current users id
   // const id = BigInt(req.session.passport.user.id); // change later to CONST
   // if (!id) {
   //   return res.status(400).end();
   // }
-  const id = BigInt(231776440587255808); // delete later
+  const id = USER_ID;
 
   // Get the webhook id from url
   const { webhookId } = req.params;

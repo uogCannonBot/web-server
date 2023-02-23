@@ -57,22 +57,21 @@ module.exports = async function sendWcMessage(listing) {
   } catch (err) {
     throw err;
   }
+
+  // TODO: replace with queuing system
   webhookClients.forEach(async (webhook) => {
     // send the message
     const { client } = webhook;
-    return await client
-      .send({
-        embeds: [embed],
-        files: ["./public/house.png", "./public/cannon.png"],
-      })
-      .then((res) => true)
-      .catch((err) => {
-        console.log(
-          "An error occurred sending a Discord WebHook Message for the listing with address: ",
-          listing.address
-        );
-        console.error(err);
-        return false;
-      });
+    try {
+      const result = await client
+          .send({
+            embeds: [embed],
+            files: ["./public/house.png", "./public/cannon.png"],
+          });
+    } catch (err){
+      // TODO: implement re-queuing and deletion of old webhooks (err.status === 404)
+      //
+      console.error(err);
+    }
   });
 };

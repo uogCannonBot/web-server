@@ -1,19 +1,4 @@
-const houseTypes = [
-  "House",
-  "Shared House",
-  "Apartment/Condo",
-  "Shared Apartment/Condo",
-  "Bachelor Apartment",
-];
-
-const isValidDate = (date) => {
-  return date instanceof Date && !isNaN(date);
-};
-
-const isValidHouseType = (house) => {
-  const type = houseTypes.filter((houseType) => house === houseType);
-  return type.length === 1 ? true : false;
-};
+const { isValidDate, isValidHouseType } = require("./helpers")
 
 const bodyIsValidlisting = (listing) => {
   const validation = {
@@ -101,7 +86,6 @@ const bodyIsValidlisting = (listing) => {
     validation.validateMessage = "listing price is not provided";
     return validation;
   }
-  console.log("success reached");
   return validation;
 };
 

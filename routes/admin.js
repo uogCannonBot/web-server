@@ -22,16 +22,13 @@ router.post("/listings", async (request, response) => {
   const { listing } = request.body;
 
   // validate the input and listing converted
-  console.log(listing);
   const { validateSuccess, validateMessage } = bodyIsValidListing(listing);
   if (!validateSuccess) {
-    console.log({ validateSuccess, validateMessage });
     return response.status(400).json({
       success: validateSuccess,
       message: validateMessage,
     });
   }
-  console.log("validaiton: ", listing);
 
   let dbConnection = await db.get().getConnection(); // get the database connection
   if (!dbConnection) {
@@ -62,7 +59,6 @@ router.post("/listings", async (request, response) => {
     // If listing DNE, Add the listing to the data
     if (!rows || rows.length === 0) {
       listing.id = uuidv4(); // add a unique id to the listing itself
-      // console.log(listing);
       const insertQuery =
         "INSERT INTO houses (id, post_date, available, l_type, h_type, address, distance, sublet, rooms, price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
       const [resHeader, colHeader] = await dbConnection.query(insertQuery, [
@@ -127,7 +123,7 @@ router.post("/listings", async (request, response) => {
       try {
         sendWcMessage(listing);
       } catch (err) {
-        console.log(err);
+        console.error(err);
         return response.status(500).json({
           success: false,
           error:

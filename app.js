@@ -16,7 +16,6 @@ const listingsRoute = require("./routes/admin");
 const authRoute = require("./routes/auth/login");
 const webhookRoute = require("./routes/webhook");
 const dbPool = require("./models/dbConnect");
-const wb = require("./utils/webhook");
 
 const app = express();
 
@@ -62,7 +61,6 @@ app.use(morgan("dev"));
 // Start
 const server = app.listen(config.app.PORT, async () => {
   await dbPool.connect(); // connect to SQL database once the application is run
-  await wb.connect(); // connect to ALL Discord WebHooks related to the application
   console.log(`Server listening on PORT ${config.app.PORT}`);
 });
 

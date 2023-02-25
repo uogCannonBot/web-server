@@ -121,6 +121,8 @@ router.post("/listings", async (request, response) => {
 
       // Send a webhook message that a new listing is added to Discord
       try {
+        // TODO: replace with separate task to filter all webhooks
+        // and send messages to all webhooks (job queue)
         sendWcMessage(listing);
       } catch (err) {
         console.error(err);

@@ -2,7 +2,7 @@ const { Router } = require("express");
 const checkAuthenticated = require("../middleware/checkAuthenticated");
 const db = require("../models/dbConnect");
 const bodyIsValidWebhook = require("../utils/bodyIsValidWebhook");
-const { WebhookClient } = require("discord.js");
+const {createAndEditWebhook} = require("../utils/webhook");
 
 const router = new Router();
 
@@ -171,7 +171,7 @@ router.post("/", async (req, res) => {
   try {
     // create a new webhook
     const { url } = body;
-    const webhook = new WebhookClient({ url });
+    const webhook = await createAndEditWebhook(url);
     await dbConnection.query(
       "INSERT INTO webhooks (webhook_id, user_id, hook_url, name) VALUES (?, (SELECT user_id FROM users WHERE user_id = ?), ?, ?)",
       [webhook.id, id, webhook.url, body.name]

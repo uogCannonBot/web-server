@@ -2,30 +2,65 @@
 
 const config = require("./utils/config");
 
+// Dependencies
 const express = require("express");
+const session = require("express-session");
+const passport = require("passport");
 require("express-async-errors");
-const { checkAdmin } = require("./middleware/checkAdmin");
-const admin = require("./routes/admin");
-const dbPool = require("./models/dbConnect");
-const wb = require("./utils/webhook");
 const cors = require("cors");
+const morgan = require("morgan");
+
+// sub-routines/classes
+const { checkAdmin } = require("./middleware/checkAdmin");
+const listingsRoute = require("./routes/admin");
+const authRoute = require("./routes/auth/login");
+const webhookRoute = require("./routes/webhook");
+const dbPool = require("./models/dbConnect");
+
 const app = express();
+
+console.log("NODE_ENV=", process.env.NODE_ENV);
+
+require("./strategies/discord");
 
 // Middleware
 app.use(express.json());
-app.use(cors());
-app.use(express.static("public"));
-app.all("/admin/*", checkAdmin, (request, response, next) => {
-  next();
-});
+app.use(
+  express.urlencoded({
+    extended: false,
+  })
+);
+app.use(cors({ origin: config.app.URL, credentials: true }));
+app.use(
+  session({
+    secret: config.app.SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+// passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Routes
-app.post("/admin/listings", admin.load);
+app.use("/api/auth", authRoute);
+// app.all("/admin/*", checkAdmin, (request, response, next) => {
+//   next();
+// });
+app.use("/api/admin", listingsRoute);
+app.use("/api/webhook", webhookRoute);
+
+app.use((req, res) => {
+  res.status(404).send({ error: "unknown endpoint" });
+}); // generic route (ALWAYS KEEP LAST)
+
+// logger last
+app.use(morgan("dev"));
 
 // Start
 const server = app.listen(config.app.PORT, async () => {
   await dbPool.connect(); // connect to SQL database once the application is run
-  await wb.connect(); // connect to ALL Discord WebHooks related to the application
   console.log(`Server listening on PORT ${config.app.PORT}`);
 });
 

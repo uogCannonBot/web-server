@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:alpine3.17
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+    expose:
+      - ${REDIS_PORT}
+    volumes:
+      - redis:/data
+
+  mysql:
+    image: mysql:8
+    restart: always
+    command: --init-file /data/db/models/init.sql
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    volumes:
+      - data:/data/db
+      - type: bind
+        source: ./models/
+        target: /data/db/models
+    environment:
+      - MYSQL_TCP_PORT=${DB_PORT}
+      - MYSQL_DATABASE=cannon
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+    expose:
+      - ${DB_PORT}
+
+volumes:
+  data:
+  redis:

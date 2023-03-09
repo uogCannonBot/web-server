@@ -1,7 +1,14 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import * as path from "path";
 
-// https://vitejs.dev/config/
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import rollupReplace from "@rollup/plugin-replace";
+
 export default defineConfig({
-  plugins: [react()],
-})
+  server: {
+    port: 3000,
+  },
+  plugins: [
+    react(),
+  ],
+});

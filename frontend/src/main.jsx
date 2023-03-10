@@ -6,7 +6,7 @@ import "./index.css";
 import Layout from "./components/Layout";
 import ErrorPage from "./pages/ErrorPage";
 import Login from "./pages/Login";
-import { Dashboard } from "./pages/Dashboard";
+import { Dashboard, webhookLoader, Root } from "./pages/dashboard";
 import { AuthLayout, AuthProvider, RequireAuth, loader as authLoader } from "./utils/auth";
 
 const router = createBrowserRouter([
@@ -28,6 +28,11 @@ const router = createBrowserRouter([
             path: "login",
             element: <Login />,
           },
+          {
+            path: "webhooks",
+            loader: webhookLoader,
+            element: <RequireAuth component={<Root /> } />,
+          }
         ],
       },
     ],

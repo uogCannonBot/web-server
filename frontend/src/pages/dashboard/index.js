@@ -1,4 +1,4 @@
-import Dashboard from './Dashboard';
-import Webhook from "./Webhook";
+import Dashboard from "./Dashboard";
+import { Root, webhookLoader } from "./webhooks";
 
-export { Dashboard, Webhook };
+export { Dashboard, Root, webhookLoader };

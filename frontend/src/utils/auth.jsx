@@ -36,7 +36,7 @@ export const AuthProvider = ({ children, userData }) => {
 }
 
 const getUserData = async () => {
-  return fetch("http://localhost:8080/api/auth/login/success", {
+  return fetch("/api/auth/login/success", {
     method: "GET",
     credentials: "include",
     headers: {
@@ -59,7 +59,7 @@ export const RequireAuth = ({ component }) => {
   const { user } = useAuth();
   let location = useLocation();
 
-  console.log("user = ", user);
+  console.log("auth user = ", user);
   if (user == null) {
     console.log('redirecting when user = ', user);
     return <Navigate to="/login"  state={{ from: location }} replace />

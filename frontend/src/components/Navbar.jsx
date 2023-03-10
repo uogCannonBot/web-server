@@ -2,14 +2,16 @@ import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import WebhookOutlinedIcon from '@mui/icons-material/WebhookOutlined';
-
 import Box from "@mui/material/Box";
+import Alert from "@mui/material/Alert";
+import { useTheme } from "@mui/material/styles";
+
 import {Link, Form} from "react-router-dom";
 import {Menu, MenuItem, Sidebar, useProSidebar} from "react-pro-sidebar";
-import Alert from "@mui/material/Alert";
 import { useAuth } from "../utils/auth";
 
 const Navbar = () => {
+  const theme = useTheme();
   const { logout } = useAuth();
 
   // sidebar settings
@@ -23,7 +25,7 @@ const Navbar = () => {
 
   return (
           <Form method="GET" action="logout" onSubmit={logoutHandler}>
-            <Sidebar style={{ height: "100%", display: "flex" }} >
+            <Sidebar backgroundColor={theme.palette.grey[200]} style={{ height: "100%", display: "flex" }} >
               <Menu>
                   <MenuItem
                     icon={<MenuOutlinedIcon />}
@@ -43,7 +45,7 @@ const Navbar = () => {
                   </MenuItem>
                   <MenuItem 
                     icon={<WebhookOutlinedIcon />}
-                    component={<Link to="webhooks/1" />}
+                    component={<Link to="webhooks" />}
                     >
                       Webhooks
                   </MenuItem>

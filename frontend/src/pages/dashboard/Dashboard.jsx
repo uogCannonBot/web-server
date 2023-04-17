@@ -25,6 +25,8 @@ import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Checkbox from "@mui/material/Checkbox";
+import { DatePicker}  from "@mui/x-date-pickers/DatePicker"
 
 import { Form } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -45,6 +47,15 @@ const Dashboard = () => {
   const [priceRange, setPriceRange] = useState([500, 1500]);
   const [lowPriceInput, setLowPrice] = useState(500);
   const [highPriceInput, setHighPrice] = useState(1500);
+  const [dateRangeStart, setDateRangeStart] = useState(null);
+  const [dateRangeEnd, setDateRangeEnd] = useState(null);
+  const [amenities, setAmenities] = useState({ 
+    pets: false,
+    noSmoking: false,
+    parkingIncluded: false,
+    laundry: false,
+    cooking: false,
+   });
 
   useEffect(() => {
     if (lowPriceInput !== ""){
@@ -70,6 +81,18 @@ const Dashboard = () => {
 
   const handleBedrooms = (e, bedroomNum) => {
     setBedrooms(bedroomNum);
+  }
+
+  const handleDateRangeStart = (newDateRange) => {
+    setDateRangeStart(newDateRange);
+  }
+
+  const handleDateRangeEnd = (newDateRange) => {
+    setDateRangeEnd(newDateRange);
+  }
+
+  const handleAmenities = (e) => {
+    setAmenities({...amenities, [e.target.value]: !amenities[e.target.value],});
   }
 
   const handlePriceRangeSlider = (e, newPriceRange, activeThumb) => {
@@ -145,7 +168,6 @@ const Dashboard = () => {
               </Typography>
             </Box>
             <Divider sx={{ marginBottom: 0.5 }} />
-
             {/** Content */}
             <Box id="filter-content" sx={{ display: "flex", flexDirection: "column", flexGrow: 2, m: 1, overflow: "auto" }}>
             {/** House Type + Sublet */}
@@ -185,22 +207,22 @@ const Dashboard = () => {
                   value={listingType}
                   onChange={handleListingType}
                 >
-                  <MenuItem value={"Any"}>Any</MenuItem>
+                  <MenuItem value={"Any"}>All</MenuItem>
                   <MenuItem value={"Offering"}>Offering</MenuItem>
                   <MenuItem value={"Wanted"}>Wanted</MenuItem>
                 </Select>
               </FormControl>
               {/** Sublet */}
               <FormControl sx={{flexGrow: 1, m:0.5, marginTop: 2 }}>
-                <InputLabel id="sublet-label">Show Sublets?</InputLabel>
+                <InputLabel id="sublet-label">Only Sublets?</InputLabel>
                 <Select
                   labelId="sublet-label"
                   id="sublet-select"
-                  label="Show Sublets?"
+                  label="Only Sublets?"
                   value={showSublets}
                   onChange={handleShowSublets}
                 >
-                  <MenuItem value={"Any"}>Any</MenuItem>
+                  <MenuItem value={"Any"}>All</MenuItem>
                   <MenuItem value={"Offering"}>Yes</MenuItem>
                   <MenuItem value={"Wanted"}>No</MenuItem>
                 </Select>
@@ -213,8 +235,7 @@ const Dashboard = () => {
             {/** Bedrooms */}
             <Typography variant="h6">
               Bedrooms
-            </Typography>
-            
+            </Typography>     
             <FormGroup row sx={{
               display: "flex",
               justifyContent: "start",
@@ -337,11 +358,25 @@ const Dashboard = () => {
                 Available Date
               </Typography>
               <FormGroup row sx={{
+                width: "100%",
                 display: "flex",
-                justifyContent: "start",
+                justifyContent: "center",
+                gap: "15px",
+                flexGrow: 1,
+                flexShrink: 1,
               }}>
-                
-              </FormGroup>
+                <DatePicker 
+                  value={dateRangeStart}
+                  onChange={handleDateRangeStart}
+                /> 
+                <Typography variant="subtitle" sx={{ alignSelf: "center"}}>
+                    ━
+                </Typography>
+                <DatePicker 
+                  value={dateRangeEnd}
+                  onChange={handleDateRangeEnd}
+                /> 
+                </FormGroup>
             </Box>
             {/** Amenities */}
             <Divider sx={{ marginY: 2, marginX: 1 }}/>
@@ -352,11 +387,30 @@ const Dashboard = () => {
               <FormGroup row sx={{
                 display: "flex",
                 justifyContent: "start",
+                flexDirection: "column",
               }}>
-                
+                <FormControlLabel 
+                  control={<Checkbox value={"pets"} checked={amenities.pets} onChange={handleAmenities} />} 
+                  label="Pets Allowed" 
+                />
+                <FormControlLabel 
+                  control={<Checkbox value={"noSmoking"} checked={amenities.noSmoking} onChange={handleAmenities} />} 
+                  label="No Smoking" 
+                />
+                <FormControlLabel 
+                  control={<Checkbox value={"parkingIncluded"} checked={amenities.parkingIncluded} onChange={handleAmenities} />} 
+                  label="Parking" 
+                />
+                <FormControlLabel 
+                  control={<Checkbox value={"laundry"} checked={amenities.laundry} onChange={handleAmenities} />} 
+                  label="Laundry" 
+                />
+                <FormControlLabel 
+                  control={<Checkbox value={"cooking"} checked={amenities.cooking} onChange={handleAmenities} />} 
+                  label="Cooking" 
+                />
               </FormGroup>
             </Box>
-
             </Box>{/** End of Content */}
             
             {/** Footer */}

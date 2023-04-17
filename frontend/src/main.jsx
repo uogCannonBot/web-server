@@ -9,6 +9,9 @@ import Login from "./pages/Login";
 import { Dashboard, webhookLoader, Root } from "./pages/dashboard";
 import { AuthLayout, AuthProvider, RequireAuth, loader as authLoader } from "./utils/auth";
 
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -41,10 +44,12 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")).render(
     <React.StrictMode>
-      <ProSidebarProvider>
-        <AuthProvider userData={null}>
-          <RouterProvider router={router} />
-        </AuthProvider>
-      </ProSidebarProvider>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <ProSidebarProvider>
+          <AuthProvider userData={null}>
+            <RouterProvider router={router} />
+          </AuthProvider>
+        </ProSidebarProvider>
+      </LocalizationProvider>
     </React.StrictMode>
 )

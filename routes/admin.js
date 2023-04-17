@@ -2,10 +2,10 @@
 
 const { Router } = require("express");
 const db = require("../models/dbConnect");
-const sendWcMessage = require("../utils/sendWcMessage");
 const { v4: uuidv4 } = require("uuid");
-const res = require("express/lib/response");
-const bodyIsValidListing = require("../utils/bodyIsValidListing");
+const { bodyIsValidListing } = require("../utils/validators");
+const {filterWebhooks} = require("../utils/webhook");
+const {sendNewHookMessage} = require("../utils/queues/hookMessage.queue");
 
 const router = new Router();
 
@@ -121,9 +121,11 @@ router.post("/listings", async (request, response) => {
 
       // Send a webhook message that a new listing is added to Discord
       try {
-        // TODO: replace with separate task to filter all webhooks
-        // and send messages to all webhooks (job queue)
-        sendWcMessage(listing);
+        const filteredWebhooks = await filterWebhooks(listing)
+        filteredWebhooks.forEach(webhook => {
+          // add job to queue
+          sendNewHookMessage(webhook, listing);
+        });
       } catch (err) {
         console.error(err);
         return response.status(500).json({

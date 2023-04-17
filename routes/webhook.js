@@ -1,7 +1,7 @@
 const { Router } = require("express");
 const checkAuthenticated = require("../middleware/checkAuthenticated");
 const db = require("../models/dbConnect");
-const bodyIsValidWebhook = require("../utils/bodyIsValidWebhook");
+const { bodyIsValidWebhook } = require("../utils/validators");
 const {createAndEditWebhook} = require("../utils/webhook");
 
 const router = new Router();
@@ -167,11 +167,21 @@ router.post("/", async (req, res) => {
     return res.status(500).json({ error: "failed to connect to database" });
   }
 
+  // check that the webhook exists
+  const { url } = body;
+  let webhook;
+  try {
+    webhook = await createAndEditWebhook(url);
+  } catch (err){
+    res.status(404).json({
+      success: false,
+      message: "the webhook you are trying to create does not exist in Discord",
+      error: err,
+    })
+  }
+
   // wrap all database queries inside a try-catch despite having express-async-errors
   try {
-    // create a new webhook
-    const { url } = body;
-    const webhook = await createAndEditWebhook(url);
     await dbConnection.query(
       "INSERT INTO webhooks (webhook_id, user_id, hook_url, name) VALUES (?, (SELECT user_id FROM users WHERE user_id = ?), ?, ?)",
       [webhook.id, id, webhook.url, body.name]
@@ -190,8 +200,8 @@ router.post("/", async (req, res) => {
         options.bedrooms,
         options.low_price_range,
         options.high_price_range,
-        options.start_date,
-        options.end_date,
+        options.start_date == null ? null : new Date(options.start_date),
+        options.end_date == null ? null : new Date(options.end_date),
       ]
     );
 
@@ -204,7 +214,10 @@ router.post("/", async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(502).json({ error: err });
+    res.status(502).json({
+      success: false,
+      error: err
+    });
     throw err;
   } finally {
     // ALWAYS release the db connection once finished
@@ -285,6 +298,7 @@ router.put("/:webhookId", async (req, res) => {
     );
   } catch (err) {
     res.status(409).json({
+      success: false,
       message: `failed to update record with webhook id: ${webhookId}`,
       error: err.message,
     });
@@ -341,7 +355,11 @@ router.delete("/:webhookId", async (req, res) => {
   } catch (err) {
     res
       .status(409)
-      .json({ error: `failed to delete record with webhook id: ${webhookId}` });
+      .json({
+        success: false,
+        message: `failed to delete record with webhook id: ${webhookId}`,
+        error: err
+      });
     throw err;
   } finally {
     dbConnection.release();

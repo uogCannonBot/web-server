@@ -9,19 +9,30 @@ const passport = require("passport");
 require("express-async-errors");
 const cors = require("cors");
 const morgan = require("morgan");
+const { ExpressAdapter, createBullBoard, BullAdapter } = require("@bull-board/express");
+require("./strategies/discord");
 
 // sub-routines/classes
+const { hookMessageQueue } = require("./utils/queues/hookMessage.queue");
 const { checkAdmin } = require("./middleware/checkAdmin");
 const listingsRoute = require("./routes/admin");
 const authRoute = require("./routes/auth/login");
 const webhookRoute = require("./routes/webhook");
 const dbPool = require("./models/dbConnect");
 
+
+// initialize Queue Bull-Board with express
+const serverAdapter = new ExpressAdapter();
+serverAdapter.setBasePath("/admin/queues");
+const { addQueue, removeQueue, setQueues, replaceQueues } = createBullBoard({
+  queues: [new BullAdapter(hookMessageQueue)],
+  serverAdapter,
+})
+
+
 const app = express();
 
 console.log("NODE_ENV=", process.env.NODE_ENV);
-
-require("./strategies/discord");
 
 // Middleware
 app.use(express.json());
@@ -48,6 +59,7 @@ app.use("/api/auth", authRoute);
 // app.all("/admin/*", checkAdmin, (request, response, next) => {
 //   next();
 // });
+app.use("/admin/queues", serverAdapter.getRouter());
 app.use("/api/admin", listingsRoute);
 app.use("/api/webhook", webhookRoute);
 

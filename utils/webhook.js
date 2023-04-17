@@ -49,18 +49,32 @@ const filterWebhooks = async (listing) => {
     // compare each webhook to the house
     filteredWebhooks = webhooks.filter((webhook) => isHouseAndWebhookEqual(webhook, house[0]));
 
-    // turn them all into clients
+    // uncomment below if not using Bull queue with Redis
+    /*
     filteredWebhooks = filteredWebhooks.map((webhook) => {
-      webhook.client = new WebhookClient({ url: webhook.hook_url });
+      webhook.client = new WebhookClient({ url: webhook.hook_url }, {
+        restRequestTimeout: 15000
+      });
       return webhook;
     });
+    */
+
   } catch (err) {
     throw err;
   } finally {
     await dbConnection.release();
   }
-
   return filteredWebhooks;
+}
+
+const sendMessageToWebhook = async (webhook, listingToFormat) => {
+  const client = new WebhookClient({ url: webhook.hook_url });
+  const embed = createListingEmbed(listingToFormat);
+
+  return client.send({
+        embeds: [embed],
+        files: ["./public/house.png", "./public/cannon.png"],
+  });
 }
 
 const createListingEmbed = (listing) => {
@@ -110,10 +124,6 @@ const createListingEmbed = (listing) => {
     return embed;
 }
 
-const sendMessageToWebhook = async (webhook) => {
-
-}
-
 const createAndEditWebhook = async (url) => {
   const client = new WebhookClient({ url });
 
@@ -127,4 +137,5 @@ const createAndEditWebhook = async (url) => {
 module.exports = {
   filterWebhooks,
   createAndEditWebhook,
+  sendMessageToWebhook,
 };
